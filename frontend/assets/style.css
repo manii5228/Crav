@@ -1,0 +1,570 @@
+/* Custom Styles inspired by the reference designs */
+body {
+    font-family: 'Poppins', sans-serif; /* You may need to import this font */
+    background-color: #FEF8F4;
+    color: #333;
+}
+
+:root {
+    --brand-color: #FD6E22;
+    --secondary-color: #FFC1A1;
+}
+
+.text-brand {
+    color: var(--brand-color) !important;
+}
+
+.btn-brand {
+    background-color: var(--brand-color);
+    color: white;
+    border-radius: 25px;
+    padding: 10px 25px;
+    font-weight: 500;
+}
+.btn-brand:hover {
+    background-color: #e65a0c;
+    color: white;
+}
+
+/* Sections */
+section {
+    padding: 80px 0;
+}
+
+/* Navbar */
+.navbar-brand {
+    font-size: 1.8rem;
+    color: var(--brand-color);
+}
+.navbar .nav-link {
+    font-weight: 500;
+}
+
+/* Hero Section */
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* Features Section */
+.feature-box {
+    background-color: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    height: 100%;
+}
+
+/* Categories Section */
+.category-card {
+    position: relative;
+    padding-top: 20px;
+}
+.category-card img {
+    max-width: 150px;
+    margin-bottom: 20px;
+}
+.category-card a {
+    color: var(--brand-color);
+    font-weight: 500;
+}
+
+/* Menu Card */
+.menu-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+}
+.menu-card:hover {
+    transform: translateY(-10px);
+}
+.menu-img-container {
+    padding: 20px;
+    background-color: #FFF0E8;
+    border-radius: 50%;
+    width: 200px;
+    height: 200px;
+    margin: 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.menu-card img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* Footer */
+.footer-section {
+    background-color: #FFF0E8;
+}
+.footer-section h5, .footer-section h6 {
+    color: var(--brand-color);
+}
+.footer-section a {
+    color: #555;
+    text-decoration: none;
+}
+.footer-section a:hover {
+    color: var(--brand-color);
+}
+
+.restaurant-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.restaurant-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+.restaurant-card .card-img-top {
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    height: 200px;
+    object-fit: cover; /* Ensures the image covers the area without distortion */
+}
+.btn-outline-brand {
+    color: var(--brand-color);
+    border-color: var(--brand-color);
+}
+.btn-outline-brand:hover {
+    color: white;
+    background-color: var(--brand-color);
+    border-color: var(--brand-color);
+}
+.review-form-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.08);
+    max-width: 500px;
+    margin: auto;
+}
+.star-rating .star {
+    font-size: 2.5rem;
+    color: #ccc;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.star-rating .star:hover,
+.star-rating .star.filled {
+    color: #ffc107; /* Bootstrap's warning color for yellow */
+}
+/* Custom Styles for Cart and Checkout */
+.order-summary-card {
+    border: none;
+    border-radius: 15px;
+    background-color: #FFF0E8; /* Soft brand background */
+    box-shadow: 0 4px 25px rgba(0,0,0,0.05);
+}
+.order-summary-card .list-group-item {
+    background-color: transparent;
+    border: none;
+}
+.order-summary-card .total-row {
+    font-weight: bold;
+    color: var(--brand-color);
+    padding-top: 1rem;
+    border-top: 1px solid #ffded0;
+}
+
+.empty-cart-container {
+    padding: 50px 0;
+}
+.empty-cart-image {
+    max-width: 250px;
+    opacity: 0.7;
+}
+
+/* General Card Styling for Checkout Page */
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.08);
+}
+/* --- Empty State (Favorites, Cart, etc.) --- */
+.empty-state-container {
+    padding: 50px 0;
+}
+.empty-state-image {
+    max-width: 200px;
+    opacity: 0.7;
+}
+
+/* --- Login Page --- */
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh; /* Pushes footer down */
+    padding: 40px 0;
+}
+.login-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 420px;
+}
+.login-card .form-control {
+    border-radius: 10px;
+    padding: 20px 15px;
+    background-color: #f8f9fa; /* Light grey background for inputs */
+    border: 1px solid #e9ecef;
+}
+.login-card .form-control:focus {
+    box-shadow: none;
+    border-color: var(--brand-color);
+}
+/* --- Order History Card --- */
+.order-history-card {
+    border: 1px solid #eee;
+    border-radius: 15px;
+    box-shadow: none;
+    transition: all 0.3s ease;
+}
+.order-history-card:hover {
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    transform: translateY(-5px);
+}
+
+/* --- Status Badges --- */
+.status-badge {
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: white;
+    text-transform: capitalize;
+}
+.status-badge.completed {
+    background-color: #28a745; /* Green */
+}
+.status-badge.preparing, .status-badge.placed {
+    background-color: #ffc107; /* Yellow */
+    color: #333;
+}
+.status-badge.cancelled {
+    background-color: #6c757d; /* Grey */
+}
+
+/* --- Order Detail Page --- */
+.verification-card {
+    background-color: #FFF0E8; /* Soft brand background */
+    border-radius: 15px;
+    border: none;
+}
+.otp-code {
+    font-size: 3.5rem;
+    font-weight: 700;
+    letter-spacing: 0.5rem;
+    color: var(--brand-color);
+}
+/* --- Profile Page --- */
+.profile-card {
+    max-width: 600px;
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid var(--brand-color);
+    padding: 5px;
+}
+
+.profile-card .form-control {
+    border-radius: 10px;
+    padding: 20px 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+
+.profile-card .form-control:disabled {
+    background-color: #e9ecef;
+}
+/* --- Restaurant Detail Page --- */
+.restaurant-header {
+    background-color: #FFF0E8; /* Soft brand background */
+    padding: 40px 0;
+}
+.restaurant-title {
+    font-weight: 700;
+    color: var(--brand-color);
+}
+.category-title {
+    font-weight: 600;
+    color: #333;
+}
+
+/* --- Rewards Page --- */
+.points-balance-card {
+    border: none;
+    border-radius: 15px;
+    background-color: var(--brand-color);
+    color: white;
+    box-shadow: 0 10px 40px rgba(253, 110, 34, 0.4);
+}
+.points-balance-card .text-muted {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+.points-balance-card .btn-brand {
+    background-color: white;
+    color: var(--brand-color);
+}
+.points-total {
+    font-size: 3.5rem;
+    font-weight: 700;
+}
+.points-earn {
+    color: #28a745; /* Green */
+}
+.points-redeem {
+    color: #dc3545; /* Red */
+}
+/* --- Admin Layout --- */
+.admin-container {
+    padding: 30px;
+    background-color: #f8f9fa; /* Light grey background for admin area */
+    min-height: 100vh;
+}
+.admin-page-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2rem;
+}
+
+/* --- Stat Cards (Dashboard) --- */
+.stat-card {
+    border: 1px solid #e9ecef;
+    border-radius: 15px;
+    box-shadow: none;
+    transition: all 0.3s ease;
+}
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    border-color: var(--brand-color);
+}
+.stat-card .text-muted {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.stat-card .stat-number {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--brand-color);
+}
+
+/* --- Table Actions (Coupon Page) --- */
+.table-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+/* --- Reports Page Chart --- */
+.chart-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    height: 300px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+}
+.chart-bar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 12%;
+    text-align: center;
+}
+.chart-bar {
+    width: 100%;
+    background-color: var(--brand-color);
+    border-radius: 5px 5px 0 0;
+    position: relative;
+    transition: all 0.5s ease-out;
+}
+.chart-bar:hover {
+    background-color: #e65a0c;
+}
+.chart-bar .bar-value {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8rem;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.3s;
+    background-color: #333;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+.chart-bar:hover .bar-value {
+    opacity: 1;
+}
+.chart-label {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+/* --- Top Performers List --- */
+.rank-badge {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    color: #333;
+    font-weight: bold;
+    margin-right: 15px;
+}
+.list-group-item:first-child .rank-badge {
+    background-color: var(--brand-color);
+    color: white;
+}
+/* --- Review Management Page --- */
+.review-stars {
+    color: #ffc107; /* Bootstrap's warning color for yellow stars */
+    font-size: 1.1rem;
+}
+
+.comment-cell {
+    max-width: 350px; /* Prevents long comments from stretching the table */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* --- Restaurant Menu Management Page --- */
+.menu-item-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+}
+
+.table > tbody > tr > td {
+    vertical-align: middle;
+}
+/* --- Restaurant Analytics Page --- */
+.popular-items-list .badge-pill {
+    background-color: #FFF0E8;
+    color: var(--brand-color);
+    font-weight: 500;
+}
+/* --- Restaurant Order Queue --- */
+.verification-section {
+    background-color: #FFF0E8;
+    border: none;
+}
+.order-column {
+    background-color: #f8f9fa;
+    border-radius: 15px;
+    padding: 15px;
+    height: 100%;
+}
+.column-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 15px;
+}
+.column-title.new-orders { color: #007bff; } /* Blue */
+.column-title.preparing-orders { color: #ffc107; } /* Yellow */
+.column-title.ready-orders { color: #28a745; } /* Green */
+
+.order-list {
+    min-height: 60vh; /* Ensures columns have a minimum height */
+}
+.order-card {
+    border: 1px solid #e9ecef;
+    border-left: 4px solid var(--brand-color);
+    margin-bottom: 15px;
+}
+.order-card .item-list {
+    font-size: 0.9rem;
+    padding-left: 1rem;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+/* --- Restaurant Register Page --- */
+.form-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--brand-color);
+    margin-bottom: 1rem;
+}
+/* --- Restaurant Profile Management Page --- */
+.profile-management-card .form-control {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+
+/* Toggle Switch CSS */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+}
+input:checked + .slider {
+  background-color: #28a745; /* Green for active */
+}
+input:focus + .slider {
+  box-shadow: 0 0 1px #28a745;
+}
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+.slider.round {
+  border-radius: 34px;
+}
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* Gallery thumbnails */
+.gallery-thumbnails img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+}
