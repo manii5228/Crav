@@ -6,41 +6,48 @@ import os
 from whitenoise import WhiteNoise
 
 def createApp():
-    # ✅ START: THE FIX IS HERE
-    # By setting static_folder=None, we completely disable Flask's
-    # built-in static file handling, preventing any conflicts.
+    """
+    Creates and configures the Flask application. This is the app factory.
+    """
+    # This configuration tells Flask where your static files and templates are,
+    # and that they should be served from the root URL path (e.g., /app.js), not /static/app.js.
     app = Flask(__name__,
-                static_folder=None,
-                template_folder='frontend')
-    # ✅ END: THE FIX
+                static_folder='frontend',
+                template_folder='frontend',
+                static_url_path='')
     
-    # Automatically selects the correct config
+    # Automatically select the correct configuration based on the environment.
+    # Render sets FLASK_ENV=production by default.
     if os.environ.get('FLASK_ENV') == 'production':
         app.config.from_object(ProductionConfig)
     else:
         app.config.from_object(LocalDevelopmentConfig)
 
-    # Initialize extensions with the app
+    # Initialize all Flask extensions
     db.init_app(app)
     api.init_app(app)
     migrate.init_app(app, db)
-    
     security.init_app(app, user_datastore) 
+    
+    # Push an application context to make sure extensions can be used
     app.app_context().push()
 
+    # Import the routes after the app is configured
     with app.app_context():
         from backend import routes
 
     return app
 
+# Create the application instance using the factory
 app = createApp()
 
-# Now, WhiteNoise is given full and explicit control.
-# It will serve files from the 'frontend' directory as the web root '/'.
-app.wsgi_app = WhiteNoise(app.wsgi_app, root='frontend/')
+# Wrap the Flask app with WhiteNoise.
+# WhiteNoise will automatically find the `static_folder` ('frontend') from the 
+# Flask `app` object and handle serving those files efficiently.
+app.wsgi_app = WhiteNoise(app.wsgi_app)
 
-
-# This block is only used for local development and is ignored by Gunicorn on Render
+# This block is only for running the app locally with the Flask development server.
+# Gunicorn will not use this when you deploy to Render.
 if (__name__ == '__main__'):
     app.run(debug=True)
 
