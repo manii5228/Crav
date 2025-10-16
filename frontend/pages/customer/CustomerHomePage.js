@@ -21,31 +21,7 @@ const CustomerHomePage = {
                     </div>
                 </div>
             </section>
-            <!-- FEATURES SECTION (Unchanged) -->
-            <section class="features-section bg-light">
-                 <div class="container">
-                     <div class="row">
-                         <div class="col-md-4 text-center mb-4 mb-md-0">
-                             <div class="feature-box">
-                                 <h5>Fast Delivery</h5>
-                                 <p>The Food Will Be Delivered To Your Home Within 1-2 Hours Of Your Ordering.</p>
-                             </div>
-                         </div>
-                         <div class="col-md-4 text-center mb-4 mb-md-0">
-                             <div class="feature-box">
-                                 <h5>Fresh Food</h5>
-                                 <p>Your Food Will Be Delivered 100% Fresh To Your Home, We Do Not Deliver Stale Food.</p>
-                             </div>
-                         </div>
-                         <div class="col-md-4 text-center">
-                             <div class="feature-box">
-                                 <h5>Free Delivery</h5>
-                                 <p>Your Food Delivery Is Absolutely Free, No Cost Just Order And Enjoy.</p>
-                             </div>
-                         </div>
-                     </div>
-                 </div>
-            </section>
+            
 
             <!-- ✅ START: MODIFIED RESTAURANTS SECTION -->
             <section class="restaurants-section text-center" id="nearby-restaurants">

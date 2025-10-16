@@ -49,13 +49,28 @@ const RestaurantProfileManagementPage = {
                         
                         <hr class="my-4">
 
-                        <h5>Photo Gallery (Static Demo)</h5>
+                        <!-- ✅ START: DYNAMIC PHOTO GALLERY -->
+                        <h5>Photo Gallery</h5>
+                        <div v-if="uploadError" class="alert alert-danger mt-2">{{ uploadError }}</div>
                         <div class="row gallery-thumbnails mt-3">
-                            <div v-for="(image, index) in restaurant.gallery" :key="index" class="col-md-3 mb-3">
+                            <div v-for="(image, index) in restaurant.gallery" :key="index" class="col-md-3 mb-3 gallery-item">
                                 <img :src="image" class="img-fluid rounded">
+                                <button type="button" class="btn btn-sm btn-danger remove-btn" @click="removePhoto(index)" title="Remove Image">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="photoUpload" class="upload-box">
+                                    <div v-if="isUploading" class="spinner-border text-brand" role="status"></div>
+                                    <div v-else>
+                                        <i class="fas fa-plus fa-2x text-muted"></i>
+                                        <span class="text-muted d-block mt-2">Add Photo</span>
+                                    </div>
+                                </label>
+                                <input type="file" id="photoUpload" @change="handlePhotoUpload" accept="image/jpeg, image/png, image/webp" class="d-none">
                             </div>
                         </div>
-                        <button type="button" class="btn btn-outline-secondary" disabled>Upload New Photo (Soon)</button>
+                        <!-- ✅ END: DYNAMIC PHOTO GALLERY -->
 
                         <button type="submit" class="btn btn-brand float-right" :disabled="isSaving">
                             {{ isSaving ? 'Saving...' : 'Save Changes' }}
@@ -72,14 +87,13 @@ const RestaurantProfileManagementPage = {
             error: null,
             successMessage: null,
             restaurant: {
-                isActive: true,
-                name: '',
-                openingHours: '',
-                address: '',
-                city: '',
-                description: '',
-                gallery: []
-            }
+                isActive: true, name: '', openingHours: '', address: '', city: '',
+                description: '', gallery: []
+            },
+            // ✅ START: ADDED STATE FOR UPLOADING
+            isUploading: false,
+            uploadError: null,
+            // ✅ END: ADDED STATE
         };
     },
     mounted() {
@@ -125,8 +139,45 @@ const RestaurantProfileManagementPage = {
             } finally {
                 this.isSaving = false;
             }
+        },
+        // ✅ START: ADDED METHODS FOR PHOTO MANAGEMENT
+        async handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            this.isUploading = true;
+            this.uploadError = null;
+
+            const formData = new FormData();
+            formData.append('image_file', file);
+            
+            try {
+                const token = this.$store.state.token;
+                const response = await fetch('/api/upload/image', {
+                    method: 'POST',
+                    headers: { 'Authentication-Token': token },
+                    body: formData
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || 'Image upload failed.');
+                
+                // Add the new image URL to the gallery
+                this.restaurant.gallery.push(data.url);
+            } catch (err) {
+                this.uploadError = err.message;
+            } finally {
+                this.isUploading = false;
+                event.target.value = ''; // Reset file input
+            }
+        },
+        removePhoto(index) {
+            if (confirm('Are you sure you want to remove this photo?')) {
+                this.restaurant.gallery.splice(index, 1);
+            }
         }
+        // ✅ END: ADDED METHODS
     }
 };
 
 export default RestaurantProfileManagementPage;
+

@@ -70,9 +70,26 @@ const CustomerCheckoutPage = {
                     <div class="card">
                          <div class="card-body">
                             <h4 class="card-title">3. Apply Coupon</h4>
+
+                            <!-- ✅ START: DISPLAY AVAILABLE COUPONS -->
+                            <div v-if="couponsLoading" class="text-muted small my-3">Loading available coupons...</div>
+                            <div v-if="!couponsLoading && availableCoupons.length > 0" class="mb-3">
+                                <small class="text-muted d-block mb-2">Available for you:</small>
+                                <div>
+                                    <button v-for="coupon in availableCoupons" 
+                                            :key="coupon.code" 
+                                            class="btn btn-sm btn-outline-success mr-2 mb-2"
+                                            @click="selectAndApplyCoupon(coupon)"
+                                            :disabled="!!appliedCoupon">
+                                        {{ coupon.code }} <!--<span class="coupon-deal">({{ formatCouponDeal(coupon) }})</span> -->
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- ✅ END: DISPLAY AVAILABLE COUPONS -->
+
                             <div v-if="couponError" class="alert alert-danger">{{ couponError }}</div>
                             <div v-if="appliedCoupon" class="alert alert-success">
-                                <strong>'{{ appliedCoupon.code }}' applied!</strong> You saved ₹{{ discountAmount.toLocaleString('en-IN') }}.
+                                <strong>'{{ appliedCoupon }}' applied!</strong> You saved ₹{{ discountAmount.toLocaleString('en-IN') }}.
                             </div>
                             <div class="input-group">
                                 <input type="text" class="form-control" v-model="couponCode" placeholder="Enter coupon code" :disabled="!!appliedCoupon">
@@ -82,7 +99,7 @@ const CustomerCheckoutPage = {
                                     </button>
                                 </div>
                             </div>
-                       </div>
+                        </div>
                     </div>
                 </div>
 
@@ -122,18 +139,16 @@ const CustomerCheckoutPage = {
             slotsLoading: true, slotsError: null, availableDays: [],
             selectedDate: null, selectedTime: null,
             isApplyingCoupon: false, couponCode: '', couponError: null, appliedCoupon: null,
+            discountAmount: 0,
+            
+            // --- ADDED COUPON LIST STATE ---
+            availableCoupons: [],
+            couponsLoading: true,
         };
     },
     computed: {
         ...Vuex.mapGetters(['cartItems', 'cartTotal', 'cartRestaurantId']),
         subtotal() { return this.cartTotal; },
-        discountAmount() {
-            if (!this.appliedCoupon) return 0;
-            let discount = (this.appliedCoupon.discount_type === 'Percentage') 
-                ? (this.subtotal * this.appliedCoupon.discount_value) / 100 
-                : this.appliedCoupon.discount_value;
-            return Math.min(discount, this.subtotal);
-        },
         total() { 
             return Math.max(0, this.subtotal + this.deliveryFee - this.discountAmount); 
         },
@@ -157,6 +172,7 @@ const CustomerCheckoutPage = {
     },
     async mounted() {
         await this.fetchAvailableSlots();
+        await this.fetchApplicableCoupons();
     },
     methods: {
         selectOrderType(type) {
@@ -186,7 +202,65 @@ const CustomerCheckoutPage = {
                 this.slotsLoading = false;
             }
         },
-        async applyCoupon() { /* ... unchanged ... */ },
+
+        // --- ADDED NEW METHODS FOR FETCHING AND APPLYING COUPONS ---
+        async fetchApplicableCoupons() {
+            if (!this.cartRestaurantId) return;
+            this.couponsLoading = true;
+            try {
+                const token = this.$store.state.token;
+                const response = await fetch(`/api/coupons/applicable/${this.cartRestaurantId}`, {
+                    headers: { 'Authentication-Token': token }
+                });
+                if (!response.ok) throw new Error("Could not load coupons.");
+                this.availableCoupons = await response.json();
+            } catch (err) {
+                console.error(err.message); // Log error silently
+            } finally {
+                this.couponsLoading = false;
+            }
+        },
+        formatCouponDeal(coupon) {
+            if (coupon.discount_type === 'Percentage') {
+                return `${coupon.discount_value}% OFF`;
+            }
+            return `₹${coupon.discount_value} OFF`;
+        },
+        selectAndApplyCoupon(coupon) {
+            this.couponCode = coupon.code;
+            this.applyCoupon();
+        },
+        
+        async applyCoupon() {
+            if (!this.couponCode) {
+                this.couponError = "Please enter a coupon code.";
+                return;
+            }
+            this.isApplyingCoupon = true;
+            this.couponError = null;
+            try {
+                const token = this.$store.state.token;
+                const response = await fetch('/api/coupons/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authentication-Token': token },
+                    body: JSON.stringify({
+                        code: this.couponCode,
+                        subtotal: this.subtotal,
+                        restaurant_id: this.cartRestaurantId
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                this.discountAmount = data.discount;
+                this.appliedCoupon = this.couponCode;
+                
+            } catch (err) {
+                this.couponError = err.message;
+            } finally {
+                this.isApplyingCoupon = false;
+            }
+        },
         async placeOrder() {
             this.isPlacing = true; this.error = null;
             if (this.isScheduling && !this.selectedTime) {
@@ -194,14 +268,11 @@ const CustomerCheckoutPage = {
                 this.isPlacing = false; return;
             }
             
-            // ✅ THIS IS THE FIX: The payload is now correct.
             let payload = {
                 restaurant_id: this.cartRestaurantId,
                 order_type: this.orderType,
                 items: this.cartItems.map(item => ({ menu_item_id: item.id, quantity: item.quantity })),
-                coupon_code: this.appliedCoupon ? this.appliedCoupon.code : null,
-                // The 'selectedTime' is already in the 'YYYY-MM-DD HH:MM:SS' format from the backend.
-                // It will be null if "Order Now" is selected.
+                coupon_code: this.appliedCoupon,
                 scheduled_time: this.selectedTime 
             };
 
@@ -228,4 +299,3 @@ const CustomerCheckoutPage = {
 };
 
 export default CustomerCheckoutPage;
-

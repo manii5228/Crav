@@ -17,7 +17,6 @@ import CustomerOrderDetailPage from '../pages/customer/CustomerOrderDetailPage.j
 import CustomerProfilePage from '../pages/customer/CustomerProfilePage.js';
 import CustomerFavoritesPage from '../pages/customer/CustomerFavoritesPage.js';
 import CustomerRewardsPage from '../pages/customer/CustomerRewardsPage.js';
-import CustomerReviewPage from '../pages/customer/CustomerReviewPage.js';
 
 // Restaurant Pages
 import RestaurantLoginPage from '../pages/restaurant/RestaurantLoginPage.js';
@@ -54,7 +53,6 @@ const routes = [
     { path: '/profile', component: CustomerProfilePage, name: 'Profile', meta: { requiresAuth: true, roles: ['customer'] } },
     { path: '/favorites', component: CustomerFavoritesPage, name: 'Favorites', meta: { requiresAuth: true, roles: ['customer'] } },
     { path: '/rewards', component: CustomerRewardsPage, name: 'Rewards', meta: { requiresAuth: true, roles: ['customer'] } },
-    { path: '/review/:orderId', component: CustomerReviewPage, name: 'Review', meta: { requiresAuth: true, roles: ['customer'] } },
 
     // --- Restaurant Routes ---
     { path: '/restaurant/login', component: RestaurantLoginPage, name: 'RestaurantLogin' },

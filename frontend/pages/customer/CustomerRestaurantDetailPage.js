@@ -24,18 +24,15 @@ const CustomerRestaurantDetailPage = {
                         <p>{{ restaurant.description }}</p>
                         <p><strong>Address:</strong> {{ restaurant.address }}</p>
                         
-                        <!-- ✅ START OF FIX: This button is now only visible to customers -->
                         <button v-if="isCustomer" class="btn btn-sm btn-outline-danger" @click="toggleFavorite">
                             <i :class="isFavorite ? 'fas fa-heart' : 'far fa-heart'"></i>
                             {{ isFavorite ? 'Favorited' : 'Add to Favorites' }}
                         </button>
-                        <!-- ✅ END OF FIX -->
-
                     </div>
                 </div>
 
                 <div class="container my-5">
-                    <!-- Menu Items Section (unchanged) -->
+                    <!-- Menu Items Section -->
                     <div v-for="category in restaurant.categories" :key="category.id" class="mb-5">
                         <h2 class="category-title">{{ category.name }}</h2>
                         <hr>
@@ -47,7 +44,7 @@ const CustomerRestaurantDetailPage = {
                         </div>
                     </div>
                     
-                    <!-- Reviews Section (unchanged) -->
+                    <!-- Reviews Section -->
                     <hr class="my-5">
                     <h2 class="category-title">What People Are Saying</h2>
                     <div v-if="reviewsLoading" class="text-muted">Loading reviews...</div>
@@ -80,11 +77,9 @@ const CustomerRestaurantDetailPage = {
             reviews: []
         };
     },
-    // ✅ NEW: Computed property to check the user's role from the Vuex store
     computed: {
         ...Vuex.mapGetters(['userRoles']),
         isCustomer() {
-            // This will be true only if the user's roles array includes 'customer'
             return this.userRoles && this.userRoles.includes('customer');
         }
     },
@@ -92,7 +87,6 @@ const CustomerRestaurantDetailPage = {
         await this.fetchRestaurantDetails();
         if (this.restaurant) {
             await this.fetchReviews();
-            // ✅ MODIFIED: Only check favorites status if the user is a customer
             if (this.isCustomer) { 
                 await this.checkIfFavorite();
             }
@@ -134,7 +128,7 @@ const CustomerRestaurantDetailPage = {
                 const response = await fetch('/api/favorites', {
                     headers: { 'Authentication-Token': token }
                 });
-                if (!response.ok) throw new Error("Could not check favorites status."); // Prevents JSON parse error on 403
+                if (!response.ok) throw new Error("Could not check favorites status.");
                 const favorites = await response.json();
                 if (favorites.some(fav => fav.id === this.restaurant.id)) {
                     this.isFavorite = true;

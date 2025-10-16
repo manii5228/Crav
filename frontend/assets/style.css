@@ -256,3 +256,23 @@ select.form-control {
     border-color: var(--border-color);
 }
 
+/* --- 6. Star Rating Component --- */
+.star-rating {
+    display: inline-block;
+}
+
+.star {
+    font-size: 2.5rem;          /* Make the stars bigger */
+    color: #d3d3d3;             /* Default color for an empty star (light gray) */
+    cursor: pointer;            /* Show a hand cursor on hover */
+    transition: color 0.2s;     /* Smooth color transition */
+    padding: 0 5px;             /* Add some space between stars */
+}
+
+.star:hover {
+    color: #ffc107;             /* Gold color on hover */
+}
+
+.star.filled {
+    color: #ffc107;             /* Gold color for a selected (filled) star */
+}

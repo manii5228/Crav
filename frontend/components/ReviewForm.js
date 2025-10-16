@@ -43,20 +43,21 @@ const ReviewForm = {
             this.rating = star;
         },
         submitReview() {
-            if (this.rating === 0) {
-                alert('Please select a star rating.');
+            // ✅ START: UPDATED VALIDATION LOGIC
+            // The .trim() removes any empty spaces from the comment.
+            if (this.rating === 0 && this.comment.trim() === '') {
+                alert('Please provide a star rating or write a comment to submit your review.');
                 return;
             }
+            // ✅ END: UPDATED VALIDATION LOGIC
+
             // Emit the review data to the parent component
             this.$emit('review-submitted', {
                 rating: this.rating,
                 comment: this.comment
             });
 
-            // Reset form
-            this.rating = 0;
-            this.comment = '';
-            alert('Thank you for your review!');
+            // The parent component is now responsible for handling success
         }
     }
 };

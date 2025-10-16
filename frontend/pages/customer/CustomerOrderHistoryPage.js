@@ -1,11 +1,18 @@
+// ✅ START: IMPORT THE REVIEW FORM COMPONENT
+import ReviewForm from '../../components/ReviewForm.js';
+// ✅ END: IMPORT
+
 const CustomerOrderHistoryPage = {
+    // ✅ START: REGISTER THE COMPONENT
+    components: {
+        ReviewForm,
+    },
+    // ✅ END: REGISTER
     template: `
         <div class="container my-5">
             <h2 class="text-center mb-5">Order <span class="text-brand">History</span></h2>
 
-            <div v-if="loading" class="text-center">
-                <p>Loading your order history...</p>
-            </div>
+            <div v-if="loading" class="text-center"><p>Loading your order history...</p></div>
             <div v-if="error" class="alert alert-danger">{{ error }}</div>
 
             <div v-if="!loading && !error && orders.length > 0">
@@ -23,29 +30,27 @@ const CustomerOrderHistoryPage = {
                             <div class="col-md-2">
                                 <h6 class="text-muted">TOTAL</h6>
                                 <strong>₹{{ order.total.toLocaleString('en-IN') }}</strong>
-                                </div>
+                            </div>
                             <div class="col-md-2 text-center">
-                                <span class="status-badge" :class="order.status.toLowerCase()">
-                                    {{ order.status }}
-                                </span>
+                                <span class="status-badge" :class="order.status.toLowerCase()">{{ order.status }}</span>
                             </div>
                             <div class="col-md-3 text-right">
-                                <button class="btn btn-sm btn-outline-secondary mr-2" @click="viewOrderDetails(order.id)">
-                                    View Details
-                                </button>
+                                <button class="btn btn-sm btn-outline-secondary mr-2" @click="viewOrderDetails(order.id)">View Details</button>
                                 
-                                <!-- ✅ START: CONDITIONAL REVIEW BUTTON LOGIC -->
                                 <button v-if="order.status.toLowerCase() === 'completed' && !order.has_review" 
                                         class="btn btn-sm btn-brand" 
-                                        @click="leaveReview(order)">
-                                    Leave a Review
+                                        @click="toggleReviewForm(order.id)">
+                                    {{ activeReviewOrderId === order.id ? 'Cancel' : 'Leave a Review' }}
                                 </button>
                                 <span v-if="order.has_review" class="text-success small" style="vertical-align: middle;">
                                     <i class="fas fa-check-circle mr-1"></i> Reviewed
                                 </span>
-                                <!-- ✅ END: CONDITIONAL REVIEW BUTTON LOGIC -->
                             </div>
                         </div>
+                    </div>
+                    
+                    <div v-if="activeReviewOrderId === order.id" class="review-form-container border-top p-4">
+                        <ReviewForm @review-submitted="submitReviewForOrder(order.id, $event)" />
                     </div>
                 </div>
             </div>
@@ -62,7 +67,8 @@ const CustomerOrderHistoryPage = {
         return {
             loading: true,
             error: null,
-            orders: []
+            orders: [],
+            activeReviewOrderId: null,
         };
     },
     mounted() {
@@ -91,16 +97,34 @@ const CustomerOrderHistoryPage = {
         viewOrderDetails(orderId) {
             this.$router.push({ name: 'OrderDetail', params: { id: orderId } });
         },
-        // This method navigates to the new review page
-        leaveReview(order) {
-            this.$router.push({ 
-                name: 'LeaveReview', 
-                params: { orderId: order.id },
-                query: { restaurantName: order.restaurantName }
-            });
+        toggleReviewForm(orderId) {
+            this.activeReviewOrderId = this.activeReviewOrderId === orderId ? null : orderId;
+        },
+        async submitReviewForOrder(orderId, reviewData) {
+            try {
+                const token = this.$store.state.token;
+                const response = await fetch(`/api/orders/${orderId}/review`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authentication-Token': token
+                    },
+                    body: JSON.stringify({
+                        rating: reviewData.rating,
+                        comment: reviewData.comment
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                alert("Thank you for your review!");
+                this.activeReviewOrderId = null;
+                this.fetchOrderHistory();
+            } catch (err) {
+                alert('Error submitting review: ' + err.message);
+            }
         }
     }
 };
 
 export default CustomerOrderHistoryPage;
-

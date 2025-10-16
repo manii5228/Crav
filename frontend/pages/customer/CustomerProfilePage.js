@@ -9,7 +9,6 @@ const CustomerProfilePage = {
             <div class="card profile-card mx-auto" v-if="!loading && !error">
                 <div class="card-body">
                     <div class="text-center mb-4">
-                        <img src="https://i.imgur.com/V266Ows.png" alt="Profile Avatar" class="profile-avatar">
                         <h4 class="mt-3">{{ user.name }}</h4>
                     </div>
 

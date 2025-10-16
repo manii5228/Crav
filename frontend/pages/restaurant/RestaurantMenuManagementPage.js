@@ -47,7 +47,7 @@ const RestaurantMenuManagementPage = {
                     <div class="card-body">
                         <div v-if="category.menu_items.length === 0" class="text-center text-muted p-3">This category is empty.</div>
                         <div v-else class="table-responsive">
-                            <table class="table table-hover mb-0">
+                            <table class="table table-hover mb-0 align-middle">
                                 <tbody>
                                     <tr v-for="item in category.menu_items" :key="item.id">
                                         <td width="10%">
@@ -57,6 +57,14 @@ const RestaurantMenuManagementPage = {
                                         </td>
                                         <td>
                                             <strong>{{ item.name }}</strong>
+                                            <!-- ✅ START: ADDED VEG/NON-VEG ICON -->
+                                            <span v-if="item.food_type" class="ml-2" :title="item.food_type">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect x="1" y="1" width="14" height="14" rx="2" :stroke="item.food_type === 'Veg' ? '#28a745' : '#dc3545'" stroke-width="2"/>
+                                                    <circle cx="8" cy="8" r="4" :fill="item.food_type === 'Veg' ? '#28a745' : '#dc3545'"/>
+                                                </svg>
+                                            </span>
+                                            <!-- ✅ END: ADDED VEG/NON-VEG ICON -->
                                             <p class="text-muted small mb-0">{{ item.description }}</p>
                                         </td>
                                         <td class="text-center" width="10%">₹{{ item.price.toLocaleString('en-IN') }}</td>
@@ -87,49 +95,31 @@ const RestaurantMenuManagementPage = {
                         </div>
                         <div class="modal-body">
                             <form @submit.prevent="saveMenuItem">
-                                <div class="form-group">
-                                    <label>Item Name</label>
-                                    <input type="text" class="form-control" v-model="currentItem.name" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Description</label>
-                                    <div class="input-group">
-                                        <textarea class="form-control" v-model="currentItem.description" rows="3"></textarea>
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-brand" type="button" @click="generateDescription" :disabled="isGeneratingDesc">
-                                                <span v-if="isGeneratingDesc" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                ✨ {{ isGeneratingDesc ? '' : 'Generate' }}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                <div class="form-group"><label>Item Name</label><input type="text" class="form-control" v-model="currentItem.name" required></div>
+                                <div class="form-group"><label>Description</label><div class="input-group"><textarea class="form-control" v-model="currentItem.description" rows="3"></textarea><div class="input-group-append"><button class="btn btn-outline-brand" type="button" @click="generateDescription" :disabled="isGeneratingDesc"><span v-if="isGeneratingDesc" class="spinner-border spinner-border-sm"></span> ✨ {{ isGeneratingDesc ? '' : 'Generate' }}</button></div></div></div>
                                 <div class="form-row">
                                     <div class="form-group col-md-6"><label>Price</label><input type="number" step="0.01" class="form-control" v-model.number="currentItem.price" required></div>
                                     <div class="form-group col-md-6"><label>Category</label><select class="form-control" v-model="currentItem.category_id" required><option v-for="cat in categories" :value="cat.id">{{ cat.name }}</option></select></div>
                                 </div>
                                 
+                                <!-- ✅ START: ADDED FOOD TYPE SELECTOR TO MODAL -->
                                 <div class="form-group">
-                                    <label>Item Image</label>
-                                    <div class="custom-file">
-                                        <input type="file" class="custom-file-input" id="itemImage" @change="handleImageSelect" accept="image/jpeg, image/png, image/webp">
-                                        <label class="custom-file-label" for="itemImage">{{ imageFile ? imageFile.name : 'Choose image...' }}</label>
-                                    </div>
+                                    <label>Food Type</label>
+                                    <select class="form-control" v-model="currentItem.food_type">
+                                        <option :value="null">Select...</option>
+                                        <option value="Veg">Veg</option>
+                                        <option value="Non-Veg">Non-Veg</option>
+                                    </select>
                                 </div>
-                                <div v-if="imagePreview" class="text-center mt-2">
-                                    <img :src="imagePreview" class="img-fluid rounded mb-2" style="max-height: 200px;"/>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" @click="removeImage">
-                                        <i class="fas fa-times mr-1"></i> Remove Image
-                                    </button>
-                                </div>
-
+                                <!-- ✅ END: ADDED FOOD TYPE SELECTOR -->
+                                
+                                <div class="form-group"><label>Item Image</label><div class="custom-file"><input type="file" class="custom-file-input" id="itemImage" @change="handleImageSelect" accept="image/jpeg, image/png, image/webp"><label class="custom-file-label" for="itemImage">{{ imageFile ? imageFile.name : 'Choose image...' }}</label></div></div>
+                                <div v-if="imagePreview" class="text-center mt-2"><img :src="imagePreview" class="img-fluid rounded mb-2" style="max-height: 200px;"/><button type="button" class="btn btn-sm btn-outline-danger" @click="removeImage"><i class="fas fa-times mr-1"></i> Remove Image</button></div>
                             </form>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-brand" @click="saveMenuItem" :disabled="isSaving">
-                                <span v-if="isSaving" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                {{ isSaving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Add Item') }}
-                            </button>
+                            <button type="button" class="btn btn-brand" @click="saveMenuItem" :disabled="isSaving"><span v-if="isSaving" class="spinner-border spinner-border-sm"></span> {{ isSaving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Add Item') }}</button>
                         </div>
                     </div>
                 </div>
@@ -155,12 +145,22 @@ const RestaurantMenuManagementPage = {
                 const response = await fetch('/api/restaurant/menu', { headers: { 'Authentication-Token': token } });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.message || "Failed to fetch menu.");
-                this.categories = data;
+                // ✅ START: Ensure all menu items have a food_type property for reactivity
+                this.categories = data.map(category => ({
+                    ...category,
+                    menu_items: category.menu_items.map(item => ({
+                        ...item,
+                        food_type: item.food_type || null
+                    }))
+                }));
+                // ✅ END
             } catch (err) { this.error = err.message; } finally { this.loading = false; }
         },
         openAddItemModal() {
             this.isEditMode = false;
-            this.currentItem = { id: null, name: '', description: '', price: 0, category_id: this.categories[0]?.id || null, image: '', is_available: true };
+            // ✅ START: Initialize food_type for new items
+            this.currentItem = { id: null, name: '', description: '', price: 0, category_id: this.categories[0]?.id || null, image: '', is_available: true, food_type: null };
+            // ✅ END
             this.imageFile = null; this.imagePreview = null;
             $('#menuItemModal').modal('show');
         },
@@ -251,12 +251,14 @@ const RestaurantMenuManagementPage = {
             }
         },
         downloadTemplate() {
-            const workbook = XLSX.utils.book_new();
+            // ✅ START: ADDED "Food Type" COLUMN TO THE EXCEL TEMPLATE
             const worksheet_data = [
-                ["Category", "Name", "Description", "Price"],
-                ["Starters", "Paneer Tikka", "Grilled cottage cheese cubes", 250],
-                ["Main Course", "Butter Chicken", "Creamy tomato-based chicken curry", 450],
+                ["Category", "Name", "Description", "Price", "Food Type (Veg/Non-Veg)"],
+                ["Starters", "Paneer Tikka", "Grilled cottage cheese cubes", 250, "Veg"],
+                ["Main Course", "Butter Chicken", "Creamy tomato-based chicken curry", 450, "Non-Veg"],
             ];
+            // ✅ END: ADDED "Food Type" COLUMN
+            const workbook = XLSX.utils.book_new();
             const worksheet = XLSX.utils.aoa_to_sheet(worksheet_data);
             XLSX.utils.book_append_sheet(workbook, worksheet, "Menu Template");
             XLSX.writeFile(workbook, "menu_template.xlsx");
