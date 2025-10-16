@@ -6,7 +6,8 @@ from backend.security import user_datastore # <-- IMPORT the datastore
 def createApp():
     app = Flask(__name__,
                 static_folder='frontend',
-                template_folder='frontend')
+                template_folder='frontend',
+                static_url_path='')
     
     app.config.from_object(LocalDevelopmentConfig)
 
