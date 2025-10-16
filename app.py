@@ -35,10 +35,10 @@ app = createApp()
 
 # Wrap the app with WhiteNoise to serve static files in production
 # This should be done AFTER the app is created
-app.wsgi_app = WhiteNoise(app.wsgi_app, root='frontend/')
-
+app.wsgi_app = WhiteNoise(app.wsgi_app)
 
 # This block is only used for local development and is ignored by Gunicorn on Render
 if (__name__ == '__main__'):
     app.run(debug=True)
+
 
