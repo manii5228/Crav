@@ -2061,3 +2061,8 @@ def upload_image():
 api.add_resource(RestaurantListAPI, '/api/restaurants')
 # TODO: Add customer routes for reviews, favorites, rewards, etc.
 
+# --- Frontend Serving Route ---
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_vue_app(path):
+    return render_template('index.html')
