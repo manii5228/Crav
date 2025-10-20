@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- ✅ 1. DEFINE THE BACKEND API URL -->
+    <script>
+        // This makes the backend URL available to all other scripts
+        window.API_URL = 'https://crav-api.onrender.com';
+    </script>
+
     <!-- Vue Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
     <script src="https://unpkg.com/vue-router@3/dist/vue-router.js"></script>
@@ -24,17 +31,17 @@
 <body>
     <div id="app"></div>
 
-    <!-- ✅ CORE UTILS (Order is important) -->
+    <!-- CORE UTILS (Order is important) -->
     <script src="/utils/store.js"></script>
     
-    <!-- ✅ COMPONENTS -->
+    <!-- COMPONENTS -->
     <script src="/components/Navbar.js"></script>
     <script src="/components/RestaurantCard.js"></script>
     <script src="/components/MenuItem.js"></script>
     <script src="/components/CartItem.js"></script>
     <script src="/components/ReviewForm.js"></script>
 
-    <!-- ✅ PAGE COMPONENTS (Add ALL your page files here) -->
+    <!-- PAGE COMPONENTS (Add ALL your page files here) -->
     <!-- Customer Pages -->
     <script src="/pages/customer/CustomerHomePage.js"></script>
     <script src="/pages/customer/CustomerLoginPage.js"></script>
@@ -70,10 +77,10 @@
     <script src="/pages/admin/AdminReviewManagementPage.js"></script>
     <script src="/pages/admin/AdminReportsPage.js"></script>
     
-    <!-- ✅ ROUTER (Must be loaded after pages) -->
+    <!-- ROUTER (Must be loaded after pages) -->
     <script src="/utils/router.js"></script>
 
-    <!-- ✅ MAIN APP INSTANCE (Must be last) -->
+    <!-- MAIN APP INSTANCE (Must be last) -->
     <script src="/app.js"></script>
     
     <!-- Bootstrap JS -->
