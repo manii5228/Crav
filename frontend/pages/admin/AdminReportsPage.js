@@ -94,7 +94,7 @@ const AdminReportsPage = {
             this.error = null;
             try {
                 const token = this.$store.state.token;
-                const response = await fetch('/api/admin/reports', {
+                const response = await fetch(`${window.API_URL}/api/admin/reports`, {
                     headers: { 'Authentication-Token': token }
                 });
                 

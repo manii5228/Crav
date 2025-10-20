@@ -124,7 +124,7 @@ const AdminUserManagementPage = {
             this.isExporting = true;
             try {
                 const token = this.$store.state.token;
-                const response = await fetch('/api/admin/users/export', {
+                const response = await fetch(`${window.API_URL}/api/admin/users/export`, {
                     headers: { 'Authentication-Token': token }
                 });
 

@@ -93,7 +93,7 @@ const AdminOrderManagementPage = {
             }
             try {
                 const token = this.$store.state.token;
-                const url = new URL('/api/admin/orders', window.location.origin);
+                const url = new URL(`${window.API_URL}/api/admin/orders`, window.location.origin);
                 if (this.searchQuery) {
                     url.searchParams.append('search', this.searchQuery);
                 }
@@ -120,7 +120,7 @@ const AdminOrderManagementPage = {
             if (confirm(`Are you sure you want to process a refund for order #${orderId}? This will change the order status to 'Refunded'.`)) {
                 try {
                     const token = this.$store.state.token;
-                    const response = await fetch(`/api/admin/orders/${orderId}/refund`, {
+                    const response = await fetch(`${window.API_URL}/api/admin/orders/${orderId}/refund`, {
                         method: 'POST',
                         headers: { 'Authentication-Token': token }
                     });
@@ -137,7 +137,7 @@ const AdminOrderManagementPage = {
             this.isExporting = true;
             try {
                 const token = this.$store.state.token;
-                const response = await fetch('/api/admin/orders/export', {
+                const response = await fetch(`${window.API_URL}/api/admin/orders/export`, {
                     headers: { 'Authentication-Token': token }
                 });
 

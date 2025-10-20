@@ -72,9 +72,8 @@ const AdminRestaurantManagementPage = {
                 </div>
             </div>
 
-            <!-- ✅ MODIFIED: Modal for Add/Edit Restaurant -->
             <div class="modal fade" id="restaurantModal" tabindex="-1" role="dialog">
-                <div class="modal-dialog modal-lg" role="document"> <!-- Made modal larger -->
+                <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">{{ isEditMode ? 'Edit' : 'Add' }} Restaurant</h5>
@@ -150,8 +149,8 @@ const AdminRestaurantManagementPage = {
                 longitude: null
             },
             isExporting: false,
-            isGeocoding: false, // For the modal's geocoding button
-            modalError: null, // For errors inside the modal
+            isGeocoding: false, 
+            modalError: null,
         };
     },
     mounted() {
@@ -162,7 +161,8 @@ const AdminRestaurantManagementPage = {
             this.error = null;
             try {
                 const token = this.$store.state.token;
-                const url = new URL('/api/admin/restaurants', window.location.origin);
+                // ✅ FIX #1: Simplified the URL creation
+                const url = new URL(`${window.API_URL}/api/admin/restaurants`);
                 if (this.searchQuery) url.searchParams.append('search', this.searchQuery);
                 if (this.filterStatus) url.searchParams.append('status', this.filterStatus);
 
@@ -194,16 +194,16 @@ const AdminRestaurantManagementPage = {
             }
         },
         approveRestaurant(restaurant) {
-            this.handleAction(`/api/admin/restaurants/${restaurant.id}/verify`, 'PATCH', `Are you sure you want to approve ${restaurant.name}?`);
+            this.handleAction(`${window.API_URL}/api/admin/restaurants/${restaurant.id}/verify`, 'PATCH', `Are you sure you want to approve ${restaurant.name}?`);
         },
         blockRestaurant(restaurant) {
-            this.handleAction(`/api/admin/restaurants/${restaurant.id}/block`, 'PATCH', `Are you sure you want to block ${restaurant.name}?`);
+            this.handleAction(`${window.API_URL}/api/admin/restaurants/${restaurant.id}/block`, 'PATCH', `Are you sure you want to block ${restaurant.name}?`);
         },
         unblockRestaurant(restaurant) {
-            this.handleAction(`/api/admin/restaurants/${restaurant.id}/unblock`, 'PATCH', `Are you sure you want to unblock ${restaurant.name}?`);
+            this.handleAction(`${window.API_URL}/api/admin/restaurants/${restaurant.id}/unblock`, 'PATCH', `Are you sure you want to unblock ${restaurant.name}?`);
         },
         deleteRestaurant(restaurant) {
-            this.handleAction(`/api/admin/restaurants/${restaurant.id}`, 'DELETE', `This will PERMANENTLY delete ${restaurant.name}. Are you sure?`);
+            this.handleAction(`${window.API_URL}/api/admin/restaurants/${restaurant.id}`, 'DELETE', `This will PERMANENTLY delete ${restaurant.name}. Are you sure?`);
         },
         openAddModal() {
             this.isEditMode = false;
@@ -214,12 +214,15 @@ const AdminRestaurantManagementPage = {
         openEditModal(restaurant) {
             this.isEditMode = true;
             this.modalError = null;
-            this.currentRestaurant = { ...restaurant }; // Use spread to copy all properties
+            this.currentRestaurant = { ...restaurant };
             $('#restaurantModal').modal('show');
         },
         async saveRestaurant() {
             const token = this.$store.state.token;
-            const url = this.isEditMode ? `/api/admin/restaurants/${this.currentRestaurant.id}` : '/api/admin/restaurants';
+            // ✅ FIX #2: Added window.API_URL to both parts of the URL
+            const url = this.isEditMode 
+                ? `${window.API_URL}/api/admin/restaurants/${this.currentRestaurant.id}` 
+                : `${window.API_URL}/api/admin/restaurants`;
             const method = this.isEditMode ? 'PUT' : 'POST';
             try {
                 const response = await fetch(url, {
@@ -233,7 +236,7 @@ const AdminRestaurantManagementPage = {
                 $('#restaurantModal').modal('hide');
                 this.fetchRestaurants();
             } catch (err) {
-                this.modalError = 'Error: ' + err.message; // Show error inside the modal
+                this.modalError = 'Error: ' + err.message;
             }
         },
         async geocodeAddress() {
@@ -246,7 +249,7 @@ const AdminRestaurantManagementPage = {
             try {
                 const fullAddress = `${this.currentRestaurant.address}, ${this.currentRestaurant.city}`;
                 const token = this.$store.state.token;
-                const response = await fetch('/api/geocode', {
+                const response = await fetch(`${window.API_URL}/api/geocode`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authentication-Token': token },
                     body: JSON.stringify({ address: fullAddress })
@@ -265,7 +268,7 @@ const AdminRestaurantManagementPage = {
             this.isExporting = true;
             try {
                 const token = this.$store.state.token;
-                const response = await fetch('/api/admin/restaurants/export', { headers: { 'Authentication-Token': token } });
+                const response = await fetch(`${window.API_URL}/api/admin/restaurants/export`, { headers: { 'Authentication-Token': token } });
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.message || 'Failed to download file.');
@@ -288,5 +291,3 @@ const AdminRestaurantManagementPage = {
         }
     }
 };
-
-

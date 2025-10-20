@@ -62,7 +62,7 @@ const AdminReviewManagementPage = {
             this.error = null;
             try {
                 const token = this.$store.state.token;
-                const response = await fetch('/api/admin/reviews', {
+                const response = await fetch(`${window.API_URL}/api/admin/reviews`, {
                     headers: { 'Authentication-Token': token }
                 });
                 const data = await response.json();
@@ -78,7 +78,7 @@ const AdminReviewManagementPage = {
             if (confirm('Are you sure you want to permanently delete this review? This action cannot be undone.')) {
                 try {
                     const token = this.$store.state.token;
-                    const response = await fetch(`/api/admin/reviews/${reviewId}`, {
+                    const response = await fetch(`${window.API_URL}/api/admin/reviews/${reviewId}`, {
                         method: 'DELETE',
                         headers: { 'Authentication-Token': token }
                     });

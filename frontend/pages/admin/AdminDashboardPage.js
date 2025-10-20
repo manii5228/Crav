@@ -107,7 +107,7 @@ const AdminDashboardPage = {
                     throw new Error("Authentication token not found.");
                 }
 
-                const response = await fetch('/api/admin/dashboard', {
+                const response = await fetch(`${window.API_URL}/api/admin/dashboard`, {
                     headers: {
                         'Authentication-Token': token,
                     },
@@ -136,7 +136,7 @@ const AdminDashboardPage = {
             }
             try {
                 const token = this.$store.state.token;
-                const response = await fetch(`/api/admin/restaurants/${restaurantId}/verify`, {
+                const response = await fetch(`${window.API_URL}/api/admin/restaurants/${restaurantId}/verify`, {
                     method: 'PATCH',
                     headers: {
                         'Authentication-Token': token,
