@@ -84,4 +84,3 @@ const CustomerLoginPage = {
     },
 };
 
-export default CustomerLoginPage;

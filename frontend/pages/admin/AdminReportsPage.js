@@ -118,4 +118,3 @@ const AdminReportsPage = {
     }
 };
 
-export default AdminReportsPage;

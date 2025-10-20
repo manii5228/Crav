@@ -166,5 +166,4 @@ const AdminOrderManagementPage = {
     }
 };
 
-export default AdminOrderManagementPage;
 

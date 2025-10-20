@@ -77,4 +77,4 @@ const CustomerRewardsPage = {
     }
 };
 
-export default CustomerRewardsPage;
+

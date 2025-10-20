@@ -1,43 +1,6 @@
 const Home = {
     template : `<h1> this is home </h1>`
 }
-import store from './store.js';
-
-// --- Import all page components ---
-
-// Customer Pages
-import CustomerHomePage from '../pages/customer/CustomerHomePage.js';
-import CustomerLoginPage from '../pages/customer/CustomerLoginPage.js';
-import CustomerRegisterPage from '../pages/customer/CustomerRegisterPage.js';
-import CustomerRestaurantDetailPage from '../pages/customer/CustomerRestaurantDetailPage.js';
-import CustomerCartPage from '../pages/customer/CustomerCartPage.js';
-import CustomerCheckoutPage from '../pages/customer/CustomerCheckOutPage.js';
-import CustomerOrderHistoryPage from '../pages/customer/CustomerOrderHistoryPage.js';
-import CustomerOrderDetailPage from '../pages/customer/CustomerOrderDetailPage.js';
-import CustomerProfilePage from '../pages/customer/CustomerProfilePage.js';
-import CustomerFavoritesPage from '../pages/customer/CustomerFavoritesPage.js';
-import CustomerRewardsPage from '../pages/customer/CustomerRewardsPage.js';
-
-// Restaurant Pages
-import RestaurantLoginPage from '../pages/restaurant/RestaurantLoginPage.js';
-import RestaurantRegisterPage from '../pages/restaurant/RestaurantRegisterPage.js';
-import RestaurantDashboardPage from '../pages/restaurant/RestaurantDashboardPage.js';
-import RestaurantMenuManagementPage from '../pages/restaurant/RestaurantMenuManagementPage.js';
-import RestaurantOrderQueuePage from '../pages/restaurant/RestaurantOrderQueuePage.js';
-import RestaurantProfileManagementPage from '../pages/restaurant/RestaurantProfileManagementPage.js';
-import RestaurantPromotionsPage from '../pages/restaurant/RestaurantPromotionsPage.js';
-import RestaurantAnalyticsPage from '../pages/restaurant/RestaurantAnalyticsPage.js';
-import RestaurantTimeSlotManagementPage from '../pages/restaurant/RestaurantTimeSlotManagementPage.js';
-
-// Admin Pages
-import AdminLoginPage from '../pages/admin/AdminLoginPage.js';
-import AdminDashboardPage from '../pages/admin/AdminDashboardPage.js';
-import AdminRestaurantManagementPage from '../pages/admin/AdminRestaurantManagementPage.js';
-import AdminUserManagementPage from '../pages/admin/AdminUserManagementPage.js';
-import AdminOrderManagementPage from '../pages/admin/AdminOrderManagementPage.js';
-import AdminCouponManagementPage from '../pages/admin/AdminCouponManagementPage.js';
-import AdminReviewManagementPage from '../pages/admin/AdminReviewManagementPage.js';
-import AdminReportsPage from '../pages/admin/AdminReportsPage.js';
 
 // Define the routes for the application
 const routes = [
@@ -111,4 +74,3 @@ router.beforeEach((to, from, next) => {
     }
 });
 
-export default router;

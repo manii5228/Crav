@@ -153,5 +153,4 @@ const AdminUserManagementPage = {
     }
 };
 
-export default AdminUserManagementPage;
 

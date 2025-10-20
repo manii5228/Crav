@@ -121,4 +121,3 @@ const RestaurantPromotionsPage = {
     }
 };
 
-export default RestaurantPromotionsPage;

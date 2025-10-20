@@ -14,9 +14,7 @@ const AdminDashboardPage = {
                         <div class="card stat-card h-100">
                             <div class="card-body">
                                 <h6 class="text-muted">TOTAL REVENUE</h6>
-                                <strong>₹{{ (item.price * item.quantity).toLocaleString('en-IN') }}</strong>
-
-
+                                <h3 class="stat-number">₹{{ stats.totalRevenue.toLocaleString('en-IN') }}</h3>
                             </div>
                         </div>
                     </div>
@@ -164,4 +162,3 @@ const AdminDashboardPage = {
     }
 };
 
-export default AdminDashboardPage;

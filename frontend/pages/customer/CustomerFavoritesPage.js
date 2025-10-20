@@ -68,4 +68,3 @@ const CustomerFavoritesPage = {
     }
 };
 
-export default CustomerFavoritesPage;

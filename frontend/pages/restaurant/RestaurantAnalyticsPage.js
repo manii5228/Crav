@@ -119,4 +119,3 @@ const RestaurantAnalyticsPage = {
     }
 };
 
-export default RestaurantAnalyticsPage;

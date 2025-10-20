@@ -322,5 +322,4 @@ const RestaurantMenuManagementPage = {
     }
 };
 
-export default RestaurantMenuManagementPage;
 

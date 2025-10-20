@@ -298,4 +298,3 @@ const CustomerCheckoutPage = {
     }
 };
 
-export default CustomerCheckoutPage;

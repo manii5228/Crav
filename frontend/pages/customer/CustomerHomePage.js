@@ -199,4 +199,3 @@ const CustomerHomePage = {
     }
 };
 
-export default CustomerHomePage;

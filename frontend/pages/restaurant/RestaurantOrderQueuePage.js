@@ -203,4 +203,3 @@ const RestaurantOrderQueuePage = {
     }
 };
 
-export default RestaurantOrderQueuePage;

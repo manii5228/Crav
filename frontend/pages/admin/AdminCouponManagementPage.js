@@ -149,4 +149,3 @@ const AdminCouponManagementPage = {
     }
 };
 
-export default AdminCouponManagementPage;

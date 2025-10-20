@@ -125,4 +125,3 @@ const RestaurantDashboardPage = {
     }
 };
 
-export default RestaurantDashboardPage;

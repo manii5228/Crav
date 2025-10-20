@@ -77,4 +77,3 @@ const RestaurantLoginPage = {
     },
 };
 
-export default RestaurantLoginPage;

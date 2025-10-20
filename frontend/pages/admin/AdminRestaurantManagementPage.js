@@ -289,5 +289,4 @@ const AdminRestaurantManagementPage = {
     }
 };
 
-export default AdminRestaurantManagementPage;
 

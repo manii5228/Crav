@@ -168,5 +168,4 @@ const CustomerRestaurantDetailPage = {
     }
 };
 
-export default CustomerRestaurantDetailPage;
 

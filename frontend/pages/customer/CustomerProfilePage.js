@@ -100,4 +100,3 @@ const CustomerProfilePage = {
     }
 };
 
-export default CustomerProfilePage;

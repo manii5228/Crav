@@ -156,5 +156,4 @@ const RestaurantRegisterPage = {
     },
 };
 
-export default RestaurantRegisterPage;
 

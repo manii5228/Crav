@@ -163,5 +163,4 @@ const RestaurantTimeSlotManagementPage = {
     }
 };
 
-export default RestaurantTimeSlotManagementPage;
 

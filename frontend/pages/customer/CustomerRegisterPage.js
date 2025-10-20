@@ -95,4 +95,3 @@ const CustomerRegisterPage = {
     },
 };
 
-export default CustomerRegisterPage;

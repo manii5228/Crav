@@ -179,5 +179,4 @@ const RestaurantProfileManagementPage = {
     }
 };
 
-export default RestaurantProfileManagementPage;
 

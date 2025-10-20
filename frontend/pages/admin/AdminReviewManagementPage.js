@@ -95,4 +95,3 @@ const AdminReviewManagementPage = {
     }
 };
 
-export default AdminReviewManagementPage;

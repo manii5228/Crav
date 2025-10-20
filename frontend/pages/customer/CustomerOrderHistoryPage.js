@@ -127,4 +127,3 @@ const CustomerOrderHistoryPage = {
     }
 };
 
-export default CustomerOrderHistoryPage;

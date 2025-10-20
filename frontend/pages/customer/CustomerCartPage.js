@@ -50,4 +50,3 @@ const CustomerCartPage = {
         removeItem(itemId) { this.$store.dispatch('removeItemFromCart', itemId); }
     }
 };
-export default CustomerCartPage;
