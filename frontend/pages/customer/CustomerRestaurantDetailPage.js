@@ -1,4 +1,3 @@
-import MenuItem from '../../components/MenuItem.js';
 
 const CustomerRestaurantDetailPage = {
     components: { MenuItem },

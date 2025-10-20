@@ -1,6 +1,3 @@
-// ✅ START: IMPORT THE REVIEW FORM COMPONENT
-import ReviewForm from '../../components/ReviewForm.js';
-// ✅ END: IMPORT
 
 const CustomerOrderHistoryPage = {
     // ✅ START: REGISTER THE COMPONENT

@@ -1,4 +1,3 @@
-import RestaurantCard from '../../components/RestaurantCard.js';
 
 const CustomerFavoritesPage = {
     components: {

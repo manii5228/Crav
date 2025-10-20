@@ -1,4 +1,3 @@
-import CartItem from '../../components/CartItem.js';
 
 const CustomerCartPage = {
     components: { CartItem },
