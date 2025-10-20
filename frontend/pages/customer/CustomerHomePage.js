@@ -67,7 +67,7 @@ const CustomerHomePage = {
                                     <h5 class="card-title">{{ item.name }}</h5>
                                     <div class="d-flex justify-content-between align-items-center mt-auto pt-3">
                                         <h4>₹{{ item.price.toLocaleString('en-IN') }}</h4>
-                                        <button class="btn btn-brand" @click="addToCart(item)">Buy Now</button>
+                                        <button class="btn btn-brand" @click="addToCart(item)">Add to Cart</button>
                                     </div>
                                 </div>
                             </div>
