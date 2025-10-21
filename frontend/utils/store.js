@@ -80,23 +80,17 @@ const store = new Vuex.Store({
 
     // 4. ACTIONS: Asynchronous functions that commit mutations.
     actions: {
-        // ✅ --- THIS IS THE CRITICAL CHANGE --- ✅
         async login({ commit }, credentials) {
-            try {
-                // Use the new apiService helper, which knows the correct backend URL.
-                const data = await apiService.post('/api/login', credentials);
-                
-                commit('SET_TOKEN', data.token);
-                commit('SET_USER', data.user);
-                return data; // Return data on success
-            } catch (error) {
-                // The apiService automatically throws an error on failure,
-                // so we just re-throw it to be caught by the component.
-                throw error;
-            }
+            // The apiService helper will automatically handle errors and throw them.
+            // We just need to call it and commit the data on success.
+            const data = await apiService.post('/api/login', credentials);
+            
+            commit('SET_TOKEN', data.token);
+            commit('SET_USER', data.user);
+            
+            // Return the user data so the component knows which page to redirect to.
+            return data.user;
         },
-        // ✅ --- END OF CHANGE --- ✅
-
         logout({ commit }) {
             commit('LOGOUT');
         },
