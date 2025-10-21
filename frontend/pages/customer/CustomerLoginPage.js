@@ -49,23 +49,24 @@ const CustomerLoginPage = {
             this.isLoading = true;
             this.error = null;
             try {
-                // This now calls the updated Vuex action
-                await this.$store.dispatch('login', {
+                // 1. Dispatch the login action and WAIT for it to complete.
+                // The action now returns the user object on success.
+                const user = await this.$store.dispatch('login', {
                     email: this.email,
                     password: this.password
                 });
 
-                // Check user role and redirect accordingly
-                const roles = this.$store.getters.userRoles;
-                if (roles.includes('admin')) {
+                // 2. Check the user's roles from the returned data and redirect.
+                if (user && user.roles.includes('admin')) {
                     this.$router.push('/admin/dashboard');
-                } else if (roles.includes('owner')) {
+                } else if (user && user.roles.includes('owner')) {
                     this.$router.push('/restaurant/dashboard');
                 } else {
                     this.$router.push('/');
                 }
 
             } catch (err) {
+                // If the action throws an error (handled by apiService), it will be caught here.
                 this.error = err.message;
             } finally {
                 this.isLoading = false;
