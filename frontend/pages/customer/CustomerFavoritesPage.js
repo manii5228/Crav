@@ -1,71 +1,48 @@
-const CustomerProfilePage = {
+const CustomerFavoritesPage = {
     template: `
         <div class="container my-5">
-            <h2 class="text-center mb-5">Your <span class="text-brand">Profile</span></h2>
+            <h2 class="text-center mb-5">Your Favorite <span class="text-brand">Restaurants</span></h2>
+            
+            <div v-if="loading" class="text-center">
+                <div class="spinner-border text-brand" role="status"></div>
+                <p class="mt-2 text-muted">Loading your favorites...</p>
+            </div>
+            <div v-if="error" class="alert alert-danger">{{ error }}</div>
 
-            <div v-if="loading" class="text-center">Loading profile...</div>
-            <div v-if="error" class="alert alert-danger mx-auto" style="max-width: 500px;">{{ error }}</div>
-
-            <div class="card profile-card mx-auto" v-if="!loading && !error">
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <h4 class="mt-3">{{ user.name }}</h4>
-                    </div>
-
-                    <form @submit.prevent="updateProfile">
-                        <div v-if="successMessage" class="alert alert-success">{{ successMessage }}</div>
-
-                        <div class="form-group">
-                            <label for="profileName">Full Name</label>
-                            <input type="text" class="form-control" id="profileName" v-model="user.name">
-                        </div>
-                        <div class="form-group">
-                            <label for="profileEmail">Email Address</label>
-                            <input type="email" class="form-control" id="profileEmail" v-model="user.email" disabled>
-                            <small class="form-text text-muted">Email address cannot be changed.</small>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-brand btn-block mt-4" :disabled="isSaving">
-                            {{ isSaving ? 'Saving...' : 'Save Changes' }}
-                        </button>
-                    </form>
+            <div v-if="!loading && !error && favorites.length > 0" class="row">
+                <div v-for="restaurant in favorites" :key="restaurant.id" class="col-lg-4 col-md-6 mb-4">
+                    <restaurant-card :restaurant="restaurant"></restaurant-card>
                 </div>
+            </div>
+
+            <div v-if="!loading && !error && favorites.length === 0" class="text-center empty-state-container">
+                <img src="/assets/images/empty-cart.png" alt="No Favorites" class="empty-state-image" style="opacity: 0.5;">
+                <h3 class="mt-4">No Favorites Yet!</h3>
+                <p>You can add a restaurant to your favorites from its menu page.</p>
+                <router-link to="/" class="btn btn-brand mt-2">Explore Restaurants</router-link>
             </div>
         </div>
     `,
+    components: {
+        'restaurant-card': RestaurantCard
+    },
     data() {
         return {
-            loading: false, isSaving: false, error: null, successMessage: null,
-            user: { name: '', email: '' },
+            loading: true,
+            error: null,
+            favorites: []
         };
     },
-    computed: {
-        currentUser() {
-            return this.$store.getters.currentUser;
-        }
-    },
-    methods: {
-        async updateProfile() {
-            this.successMessage = null;
-            this.error = null;
-            this.isSaving = true;
-            try {
-                const data = await apiService.put('/api/profile', { name: this.user.name });
-                this.$store.commit('SET_USER', data.user);
-                this.successMessage = data.message;
-            } catch (err) {
-                this.error = err.message;
-            } finally {
-                this.isSaving = false;
-            }
-        }
-    },
-    created() {
-        if (this.currentUser) {
-            this.user.name = this.currentUser.name;
-            this.user.email = this.currentUser.email;
-        } else {
-            this.error = "Could not load user data. Please log in again.";
+    async mounted() {
+        this.loading = true;
+        this.error = null;
+        try {
+            this.favorites = await apiService.get('/api/favorites');
+        } catch (err) {
+            this.error = err.message;
+        } finally {
+            this.loading = false;
         }
     }
 };
+
