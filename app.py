@@ -42,5 +42,6 @@ app = createApp()
 # This block is only used for local development and is ignored by Gunicorn
 if (__name__ == '__main__'):
     # For local development, this now ONLY runs the backend API server.
-    app.run(debug=True, port=10000)
+    app.run(debug=True, port=5000)
+
 
