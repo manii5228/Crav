@@ -1,103 +1,74 @@
-
 const CustomerHomePage = {
-    components: {
-        RestaurantCard
-    },
     template: `
         <div>
-            <!-- HERO SECTION (Unchanged) -->
-            <section class="hero-section">
+            <!-- HERO SECTION -->
+            <section class="hero-section text-center">
                 <div class="container">
-                    <div class="row align-items-center">
-                        <div class="col-lg-6 text-center text-lg-left">
-                            <h1 class="hero-title">All Fast Food is Available at <span class="text-brand">Foodle</span></h1>
-                            <p class="my-4">We Are Just A Click Away When You Crave For Delicious Fast Food</p>
-                            <button class="btn btn-brand btn-lg" @click="scrollToFeatured">Order Now</button>
-                        </div>
-                        <div class="col-lg-6 mt-5 mt-lg-0">
-                            <img src="/assets/images/hero.jpg" class="img-fluid" alt="Delicious food on a plate">
-                        </div>
-                    </div>
+                    <h1 class="hero-title">Delicious food, delivered.</h1>
+                    <p class="lead text-muted">The best restaurants at your fingertips.</p>
+                     <button class="btn btn-brand btn-lg mt-3" @click="scrollToFeatured">Browse Restaurants</button>
                 </div>
             </section>
             
+            <!-- RESTAURANTS SECTION -->
+            <section class="container" id="nearby-restaurants">
+                <h2>Restaurants Near You</h2>
+                
+                <!-- STATUS MESSAGES -->
+                <div v-if="isLocating" class="alert alert-info">
+                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                    Finding restaurants near your location...
+                </div>
+                <div v-if="locationError" class="alert alert-warning">
+                    <strong>{{ locationError }}</strong><br>
+                    Showing featured restaurants instead.
+                </div>
+                <div v-if="loading" class="alert alert-info">Loading...</div>
 
-            <!-- ✅ START: MODIFIED RESTAURANTS SECTION -->
-            <section class="restaurants-section text-center" id="nearby-restaurants">
-                <div class="container">
-                    <h2>Restaurants <span class="text-brand">Near You</span></h2>
-                    <p>Delicious food from local restaurants, right at your fingertips.</p>
-                    
-                    <!-- GEOLOCATION STATUS MESSAGES -->
-                    <div v-if="isLocating" class="alert alert-info mt-5">
-                        <div class="spinner-border spinner-border-sm" role="status"></div>
-                        Finding restaurants near your location...
+                <!-- RESTAURANT LIST -->
+                <div v-if="!loading" class="row">
+                    <div v-if="restaurants.length === 0" class="col-12 text-center">
+                        <p class="text-muted">No restaurants found. Showing featured restaurants as a fallback.</p>
                     </div>
-                    <div v-if="locationError" class="alert alert-warning mt-5">
-                        <strong>{{ locationError }}</strong>
-                        <p>Showing featured restaurants instead.</p>
-                    </div>
-
-                    <!-- RESTAURANT LIST -->
-                    <div v-if="!loading" class="row mt-5">
-                        <div v-if="restaurants.length === 0 && !locationError" class="col-12">
-                            <p class="text-muted">No restaurants found within a 7km radius. Showing featured restaurants instead.</p>
-                        </div>
-                        <div v-for="restaurant in restaurants" :key="restaurant.id" class="col-lg-4 col-md-6 mb-4">
-                            <RestaurantCard :restaurant="restaurant" />
-                        </div>
+                    <div v-for="restaurant in restaurants" :key="restaurant.id" class="col-md-4 mb-4">
+                        <restaurant-card :restaurant="restaurant"></restaurant-card>
                     </div>
                 </div>
             </section>
-            <!-- ✅ END: MODIFIED RESTAURANTS SECTION -->
 
-            <!-- REGULAR MENU & FOOTER (Unchanged) -->
-             <section class="menu-section text-center bg-light">
-                 <div class="container">
-                     <h2>Our Regular <span class="text-brand">Menu</span></h2>
-                     <p>These Are Our Regular Menus, You Can Order Anything You Like.</p>
-                     <div v-if="menuLoading" class="mt-5">Loading menu...</div>
-                     <div v-if="menuError" class="alert alert-danger mt-5">{{ menuError }}</div>
-                     <div v-if="!menuLoading && !menuError" class="row mt-5">
-                         <div v-for="item in menu" :key="item.id" class="col-lg-4 col-md-6 mb-4">
-                            <div class="card menu-card h-100">
-                                <div class="menu-img-container"><img :src="item.image" class="card-img-top" :alt="item.name"></div>
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title">{{ item.name }}</h5>
-                                    <div class="d-flex justify-content-between align-items-center mt-auto pt-3">
-                                        <h4>₹{{ item.price.toLocaleString('en-IN') }}</h4>
-                                        <button class="btn btn-brand" @click="addToCart(item)">Add to Cart</button>
-                                    </div>
-                                </div>
-                            </div>
-                         </div>
-                     </div>
-                 </div>
-             </section>
-             <footer class="footer-section"> ... </footer>
+            <!-- REGULAR MENU SECTION -->
+            <section class="container">
+                <h2>Our Regular Menu</h2>
+                <p class="text-muted">These Are Our Regular Menus, You Can Order Anything You Like.</p>
+                <div v-if="menuError" class="alert alert-danger">
+                    Failed to load the menu: {{ menuError }}
+                </div>
+                <div v-if="menuLoading" class="alert alert-info">Loading menu...</div>
+                <div v-if="!menuLoading" class="row">
+                    <div v-for="item in menu" :key="item.id" class="col-md-4 mb-4">
+                        <menu-item :item="item" @add-to-cart="addToCart"></menu-item>
+                    </div>
+                </div>
+            </section>
         </div>
     `,
+    components: {
+        'restaurant-card': RestaurantCard,
+        'menu-item': MenuItem
+    },
     data() {
         return {
-            loading: true, 
-            error: null, 
+            loading: true,
             restaurants: [],
-            menuLoading: true, 
-            menuError: null, 
+            menuLoading: true,
             menu: [],
-            // --- ✅ START: GEOLOCATION STATE ---
-            isLocating: true,
             locationError: null,
-            // --- ✅ END: GEOLOCATION STATE ---
-        }
-    },
-    mounted() {
-        // --- ✅ MODIFIED: We now try to find nearby restaurants first ---
-        this.findNearbyRestaurants();
-        this.fetchRegularMenu();
+            menuError: null,
+            isLocating: true,
+        };
     },
     methods: {
-        // --- ✅ START: NEW GEOLOCATION METHODS ---
+        // --- GEOLOCATION AND DATA FETCHING LOGIC ---
         findNearbyRestaurants() {
             this.isLocating = true;
             this.locationError = null;
@@ -113,14 +84,11 @@ const CustomerHomePage = {
                 async (position) => {
                     const { latitude, longitude } = position.coords;
                     try {
-                        const response = await fetch(`/api/restaurants/nearby?lat=${latitude}&lng=${longitude}`);
-                        const data = await response.json();
-                        if (!response.ok) throw new Error("Could not fetch nearby restaurants.");
-                        
+                        const data = await apiService.get(`/api/restaurants/nearby?lat=${latitude}&lng=${longitude}`);
                         this.restaurants = data;
                         if (data.length === 0) {
-                            // If no nearby are found, fetch featured as a fallback
-                           this.fetchFeaturedRestaurants();
+                            this.locationError = "No restaurants found within 7km.";
+                            this.fetchFeaturedRestaurants(); // Fallback if no nearby restaurants
                         }
                     } catch (err) {
                         this.locationError = err.message;
@@ -132,51 +100,38 @@ const CustomerHomePage = {
                 },
                 (error) => {
                     this.isLocating = false;
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            this.locationError = "You denied the request for Geolocation.";
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            this.locationError = "Location information is unavailable.";
-                            break;
-                        case error.TIMEOUT:
-                            this.locationError = "The request to get user location timed out.";
-                            break;
-                        default:
-                            this.locationError = "An unknown error occurred.";
-                            break;
-                    }
-                    this.fetchFeaturedRestaurants(); // Fallback
+                    this.locationError = "You denied the request for Geolocation.";
+                    this.fetchFeaturedRestaurants(); // Fallback if user denies permission
                 }
             );
         },
-        // --- ✅ END: NEW GEOLOCATION METHODS ---
-
-        // Renamed from fetchRestaurants to fetchFeaturedRestaurants to be more specific
         async fetchFeaturedRestaurants() {
-            this.loading = true; 
-            this.error = null;
+            this.loading = true;
             try {
-                const response = await fetch('/api/restaurants/featured');
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || "Failed to load restaurants.");
-                // If restaurants are already populated by nearby search, don't overwrite
-                if(this.restaurants.length === 0) {
+                const data = await apiService.get('/api/restaurants/featured');
+                // Only populate if nearby search hasn't already done so.
+                if (this.restaurants.length === 0) {
                     this.restaurants = data;
                 }
-            } catch (err) { this.error = err.message; } finally { this.loading = false; }
+            } catch (err) {
+                this.locationError = (this.locationError || "") + " " + err.message;
+            } finally {
+                this.loading = false;
+                this.isLocating = false;
+            }
         },
         async fetchRegularMenu() {
-            // This method remains unchanged
-            this.menuLoading = true; this.menuError = null;
+            this.menuLoading = true;
+            this.menuError = null;
             try {
-                const response = await fetch('/api/menu-items/regular');
-                if (!response.ok) throw new Error("Failed to load the menu.");
-                this.menu = await response.json();
-            } catch (err) { this.menuError = err.message; } finally { this.menuLoading = false; }
+                this.menu = await apiService.get('/api/menu-items/regular');
+            } catch (err) {
+                this.menuError = err.message;
+            } finally {
+                this.menuLoading = false;
+            }
         },
         addToCart(item) {
-            // This method remains unchanged
             if (!this.$store.getters.isAuthenticated) {
                 alert("Please log in to add items to your cart.");
                 this.$router.push('/login');
@@ -184,17 +139,20 @@ const CustomerHomePage = {
             }
             this.$store.dispatch('addItemToCart', { 
                 item: item, 
-                restaurantId: item.restaurantId
+                restaurantId: item.restaurantId 
             });
             alert(`${item.name} has been added to your cart!`);
         },
         scrollToFeatured() {
-            // This method remains unchanged
             const element = document.getElementById('nearby-restaurants');
             if (element) {
                 element.scrollIntoView({ behavior: 'smooth' });
             }
         },
+    },
+    mounted() {
+        this.findNearbyRestaurants();
+        this.fetchRegularMenu();
     }
 };
 
