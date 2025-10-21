@@ -2,45 +2,35 @@ const CustomerLoginPage = {
     template: `
         <div class="login-container">
             <div class="card login-card">
-                <div class="card-body">
+                <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <h3 class="card-title">Welcome Back!</h3>
-                        <p class="text-muted">Sign in to continue to Foodle</p>
+                        <h2 class="card-title">Welcome Back!</h2>
+                        <p class="text-muted">Sign in to continue to Crav</p>
                     </div>
                     
-                    <form @submit.prevent="handleLogin">
-                        <div v-if="error" class="alert alert-danger">{{ error }}</div>
+                    <div v-if="error" class="alert alert-danger">
+                        {{ error }}
+                    </div>
 
+                    <form @submit.prevent="handleLogin">
                         <div class="form-group">
                             <label for="email">Email Address</label>
-                            <input type="email" 
-                                   class="form-control" 
-                                   id="email" 
-                                   v-model="email"
-                                   placeholder="Enter your email" 
-                                   required>
+                            <input type="email" class="form-control" id="email" v-model="email" required>
                         </div>
-
                         <div class="form-group">
                             <label for="password">Password</label>
-                            <input type="password" 
-                                   class="form-control" 
-                                   id="password" 
-                                   v-model="password"
-                                   placeholder="Enter your password" 
-                                   required>
+                            <input type="password" class="form-control" id="password" v-model="password" required>
                         </div>
-                        
                         <div class="text-right mb-4">
                             <a href="#" class="small">Forgot Password?</a>
                         </div>
-
-                        <button type="submit" class="btn btn-brand btn-block">Login</button>
+                        <button type="submit" class="btn btn-brand btn-block" :disabled="isLoading">
+                            <span v-if="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            {{ isLoading ? 'Logging in...' : 'Login' }}
+                        </button>
                     </form>
-
-                    <p class="text-center small mt-4">
-                        Don't have an account? 
-                        <router-link to="/register">Sign Up</router-link>
+                    <p class="text-center mt-4 text-muted">
+                        Don't have an account? <router-link to="/register">Sign Up</router-link>
                     </p>
                 </div>
             </div>
@@ -48,39 +38,39 @@ const CustomerLoginPage = {
     `,
     data() {
         return {
-            email: '',
-            password: '',
+            email: 'admin@email.com',
+            password: 'admin123',
             error: null,
+            isLoading: false,
         };
     },
     methods: {
         async handleLogin() {
+            this.isLoading = true;
             this.error = null;
             try {
-                // Call the central login action from the Vuex store
+                // This now calls the updated Vuex action
                 await this.$store.dispatch('login', {
                     email: this.email,
-                    password: this.password,
+                    password: this.password
                 });
 
-                // --- THIS IS THE FIX ---
-                // After successful login, check the user's roles and redirect accordingly.
-                const userRoles = this.$store.getters.userRoles;
-
-                if (userRoles.includes('admin')) {
+                // Check user role and redirect accordingly
+                const roles = this.$store.getters.userRoles;
+                if (roles.includes('admin')) {
                     this.$router.push('/admin/dashboard');
-                } else if (userRoles.includes('owner')) {
+                } else if (roles.includes('owner')) {
                     this.$router.push('/restaurant/dashboard');
                 } else {
-                    // Default redirect for customers or if no specific role matches
                     this.$router.push('/');
                 }
 
-            } catch (error) {
-                // If the store action throws an error, display it
-                this.error = error.message;
+            } catch (err) {
+                this.error = err.message;
+            } finally {
+                this.isLoading = false;
             }
-        },
-    },
+        }
+    }
 };
 
