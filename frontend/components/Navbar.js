@@ -17,13 +17,9 @@ const Navbar = {
 
                     <div class="navbar-nav">
                         <div v-if="!isAuthenticated" class="d-flex">
-                            
-                            <!-- ✅ START OF FIX -->
-                            <button class="btn btn-outline-secondary mx-2" @click="navigateTo('/restaurant/login')">For Business</button>
-                            <button class="btn btn-outline-primary mx-2" @click="navigateTo('/login')">Login</button>
-                            <button class="btn btn-primary" @click="navigateTo('/register')">Sign Up</button>
-                            <!-- ✅ END OF FIX -->
-
+                            <router-link to="/restaurant/login" class="btn btn-outline-secondary mx-2">For Business</router-link>
+                            <router-link to="/login" class="btn btn-outline-primary mx-2">Login</router-link>
+                            <router-link to="/register" class="btn btn-primary">Sign Up</router-link>
                         </div>
 
                         <div v-else class="d-flex align-items-center">
@@ -35,7 +31,7 @@ const Navbar = {
 
                             <div class="dropdown">
                                 <button class="btn btn-secondary dropdown-toggle" type="button" id="profileDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    Hello, {{ currentUser.name || 'User' }}
+                                    Hello, {{ userName }}
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
                                     
@@ -61,8 +57,8 @@ const Navbar = {
                                         <router-link to="/admin/restaurants" class="dropdown-item">Restaurant Mgmt</router-link>
                                         <router-link to="/admin/users" class="dropdown-item">User Mgmt</router-link>
                                         <router-link to="/admin/orders" class="dropdown-item">All Orders</router-link>
-                                        <router-link to="/admin/reviews" class="dropdown-item">Review Moderation</router-link>
                                         <router-link to="/admin/coupons" class="dropdown-item">Platform Coupons</router-link>
+                                        <router-link to="/admin/reviews" class="dropdown-item">Review Moderation</router-link>
                                         <router-link to="/admin/reports" class="dropdown-item">Reports</router-link>
                                     </template>
                                     
@@ -77,19 +73,20 @@ const Navbar = {
         </nav>
     `,
     computed: {
-        ...Vuex.mapGetters(['isAuthenticated', 'currentUser', 'userRoles', 'cartItemCount']),
+        ...Vuex.mapGetters(['isAuthenticated', 'currentUser', 'cartItemCount']),
+        userName() {
+            // A more robust way to get the user's name that handles the user object not being set yet.
+            return this.currentUser ? this.currentUser.name || this.currentUser.email : 'User';
+        },
+        userRoles() {
+            // A safer way to access roles to prevent errors if currentUser is null.
+            return this.currentUser ? this.currentUser.roles : [];
+        },
         isCustomer() { return this.userRoles.includes('customer'); },
         isOwner() { return this.userRoles.includes('owner'); },
         isAdmin() { return this.userRoles.includes('admin'); }
     },
     methods: {
-        // --- ✅ START OF FIX ---
-        navigateTo(path) {
-            if (this.$route.path !== path) {
-                this.$router.push(path);
-            }
-        },
-        // --- ✅ END OF FIX ---
         handleLogout() {
             this.$store.dispatch('logout');
             if (this.$route.path !== '/') {
