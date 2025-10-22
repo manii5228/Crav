@@ -4,24 +4,27 @@ const CustomerCheckoutPage = {
             <h2 class="text-center mb-4">Finalize Your <span class="text-brand">Order</span></h2>
             <div class="row">
                 <div class="col-lg-7">
-                    <!-- Order Type -->
+
+                    <!-- Order Type Selection -->
                     <div class="card mb-4">
                         <div class="card-body">
                             <h4 class="card-title">1. Choose Order Type</h4>
                             <div class="btn-group btn-group-toggle d-flex">
                                 <label class="btn btn-outline-brand w-100" :class="{ active: orderType === 'takeaway' }" @click="selectOrderType('takeaway')">
-                                    <input type="radio" name="orderTypeOptions" value="takeaway"> <i class="fas fa-shopping-bag mr-2"></i>Takeaway
+                                    <input type="radio" name="orderTypeOptions" value="takeaway" autocomplete="off"> <i class="fas fa-shopping-bag mr-2"></i>Takeaway
                                 </label>
                                 <label class="btn btn-outline-brand w-100" :class="{ active: orderType === 'dine_in' }" @click="selectOrderType('dine_in')">
-                                    <input type="radio" name="orderTypeOptions" value="dine_in"> <i class="fas fa-utensils mr-2"></i>Dine-In
+                                    <input type="radio" name="orderTypeOptions" value="dine_in" autocomplete="off"> <i class="fas fa-utensils mr-2"></i>Dine-In
                                 </label>
                             </div>
                         </div>
                     </div>
-                    <!-- Scheduling -->
+
+                    <!-- Scheduling Section -->
                     <div class="card mb-4">
                         <div class="card-body">
                             <h4 class="card-title">2. Choose When</h4>
+                            
                             <div v-if="orderType === 'takeaway'" class="form-group">
                                 <div class="btn-group btn-group-toggle d-flex">
                                     <label class="btn btn-outline-secondary w-100" :class="{ active: scheduleChoice === 'now' }" @click="scheduleChoice = 'now'">
@@ -32,32 +35,62 @@ const CustomerCheckoutPage = {
                                     </label>
                                 </div>
                             </div>
+                            
                             <div v-if="isScheduling">
                                 <hr v-if="orderType === 'takeaway'">
+                                <p v-if="orderType === 'dine_in'" class="text-muted small">Please select a date and time for your reservation.</p>
+
                                 <div v-if="slotsLoading" class="text-muted">Loading available slots...</div>
                                 <div v-if="slotsError" class="alert alert-warning">{{ slotsError }}</div>
+                                
                                 <div v-if="!slotsLoading && availableDays.length > 0" class="form-row">
                                     <div class="form-group col-md-6">
                                         <label for="scheduleDate">Select Date</label>
                                         <select id="scheduleDate" class="form-control" v-model="selectedDate">
-                                            <option v-for="day in availableDays" :key="day.date_value" :value="day.date_value">{{ day.date_display }}</option>
+                                            <option v-for="day in availableDays" :key="day.date_value" :value="day.date_value">
+                                                {{ day.date_display }}
+                                            </option>
                                         </select>
                                     </div>
                                     <div class="form-group col-md-6">
                                         <label for="scheduleTime">Select Time</label>
                                         <select id="scheduleTime" class="form-control" v-model="selectedTime" required>
                                             <option :value="null">-- Please select --</option>
-                                            <option v-for="slot in slotsForSelectedDay" :key="slot.value" :value="slot.value">{{ slot.display }}</option>
+                                            <option v-for="slot in slotsForSelectedDay" :key="slot.value" :value="slot.value">
+                                                {{ slot.display }}
+                                            </option>
                                         </select>
                                     </div>
                                 </div>
+                                <p v-if="!slotsLoading && availableDays.length === 0 && !slotsError" class="text-muted">No scheduling slots available for this restaurant.</p>
                             </div>
+                            <p v-else class="text-muted small" v-if="orderType==='takeaway'">Your order will be prepared as soon as possible.</p>
                         </div>
                     </div>
-                    <!-- Coupon -->
+
+                    <!-- Coupon Section -->
                     <div class="card">
-                        <div class="card-body">
+                         <div class="card-body">
                             <h4 class="card-title">3. Apply Coupon</h4>
+
+                            <div v-if="couponsLoading" class="text-muted small my-3">Loading available coupons...</div>
+                            <div v-if="!couponsLoading && availableCoupons.length > 0" class="mb-3">
+                                <small class="text-muted d-block mb-2">Available for you:</small>
+                                <div>
+                                    <button v-for="coupon in availableCoupons" 
+                                            :key="coupon.code" 
+                                            class="btn btn-sm btn-outline-success mr-2 mb-2"
+                                            @click="selectAndApplyCoupon(coupon)"
+                                            :disabled="!!appliedCoupon">
+                                        {{ coupon.code }}
+                                    </button>
+                                </div>
+                            </div>
+                            <div v-if="!couponsLoading && availableCoupons.length === 0" class="mb-3">
+                                <small class="text-muted">No coupons currently available for this restaurant.</small>
+                            </div>
+
+
                             <div v-if="couponError" class="alert alert-danger">{{ couponError }}</div>
                             <div v-if="appliedCoupon" class="alert alert-success">
                                 <strong>'{{ appliedCoupon }}' applied!</strong> You saved ₹{{ discountAmount.toLocaleString('en-IN') }}.
@@ -73,6 +106,7 @@ const CustomerCheckoutPage = {
                         </div>
                     </div>
                 </div>
+
                 <!-- Order Summary -->
                 <div class="col-lg-5">
                     <div class="card order-summary-card">
@@ -104,16 +138,22 @@ const CustomerCheckoutPage = {
     `,
     data() {
         return {
-            isPlacing: false, error: null, deliveryFee: 50.00, orderType: 'takeaway', scheduleChoice: 'now',
-            slotsLoading: true, slotsError: null, availableDays: [], selectedDate: null, selectedTime: null,
-            isApplyingCoupon: false, couponCode: '', couponError: null, appliedCoupon: null, discountAmount: 0,
-            availableCoupons: [], couponsLoading: true,
+            isPlacing: false, error: null, deliveryFee: 50.00, orderType: 'takeaway',
+            scheduleChoice: 'now',
+            slotsLoading: true, slotsError: null, availableDays: [],
+            selectedDate: null, selectedTime: null,
+            isApplyingCoupon: false, couponCode: '', couponError: null, appliedCoupon: null,
+            discountAmount: 0,
+            availableCoupons: [],
+            couponsLoading: true,
         };
     },
     computed: {
         ...Vuex.mapGetters(['cartItems', 'cartTotal', 'cartRestaurantId']),
         subtotal() { return this.cartTotal; },
-        total() { return Math.max(0, this.subtotal + this.deliveryFee - this.discountAmount); },
+        total() { 
+            return Math.max(0, this.subtotal + this.deliveryFee - this.discountAmount); 
+        },
         isScheduling() { return this.orderType === 'dine_in' || this.scheduleChoice === 'later'; },
         slotsForSelectedDay() {
             if (!this.selectedDate) return [];
@@ -122,30 +162,60 @@ const CustomerCheckoutPage = {
         }
     },
     watch: {
-        isScheduling(isScheduling) {
-            if (isScheduling && this.availableDays.length > 0 && !this.selectedDate) {
-                this.selectedDate = this.availableDays[0].date_value;
-            } else if (!isScheduling) {
-                this.selectedDate = null; this.selectedTime = null;
-            }
-        },
-        selectedDate() { this.selectedTime = null; }
+        isScheduling(isScheduling, oldIsScheduling) {
+            // Only fetch slots if scheduling becomes true AND slots haven't been loaded yet or type changed
+             if (isScheduling && (!oldIsScheduling || this.slots.length === 0)) {
+                 this.fetchAvailableSlots();
+             }
+             // Set default date if switching to scheduling and days are available
+             if (isScheduling && this.availableDays.length > 0 && !this.selectedDate) {
+                 this.selectedDate = this.availableDays[0].date_value;
+             } else if (!isScheduling) {
+                 this.selectedDate = null;
+                 this.selectedTime = null;
+             }
+         },
+        selectedDate() { this.selectedTime = null; } // Reset time when date changes
+    },
+    async mounted() {
+        // Fetch slots only if needed initially (e.g., if default is dine-in)
+        if (this.isScheduling) {
+             await this.fetchAvailableSlots();
+        } else {
+            this.slotsLoading = false; // Don't show loading if not scheduling initially
+        }
+        await this.fetchApplicableCoupons();
     },
     methods: {
         selectOrderType(type) {
             this.orderType = type;
-            this.scheduleChoice = (type === 'dine_in') ? 'later' : 'now';
+            if (type === 'dine_in') {
+                this.scheduleChoice = 'later'; // Force scheduling for dine-in
+            } else {
+                 // Reset to 'now' for takeaway unless user explicitly chose 'later'
+                 if(this.scheduleChoice !== 'later') {
+                    this.scheduleChoice = 'now';
+                 }
+            }
         },
         async fetchAvailableSlots() {
             if (!this.cartRestaurantId) { this.slotsError = "Cart is empty."; this.slotsLoading = false; return; }
             this.slotsLoading = true; this.slotsError = null;
             try {
-                this.availableDays = await apiService.get(`/api/restaurants/${this.cartRestaurantId}/available-slots`);
-                if (this.availableDays.length === 0) {
+                // ✅ USE apiService
+                const data = await apiService.get(`/api/restaurants/${this.cartRestaurantId}/available-slots`);
+                this.availableDays = data;
+                 if (this.availableDays.length > 0) {
+                     // Set default date if not already set
+                     if (!this.selectedDate) {
+                        this.selectedDate = this.availableDays[0].date_value;
+                     }
+                 } else {
                     this.slotsError = "This restaurant has no scheduled time slots available.";
-                }
+                 }
             } catch (err) {
-                this.slotsError = err.message;
+                this.slotsError = "Error loading time slots: " + err.message;
+                this.availableDays = []; // Clear days on error
             } finally {
                 this.slotsLoading = false;
             }
@@ -154,17 +224,28 @@ const CustomerCheckoutPage = {
             if (!this.cartRestaurantId) return;
             this.couponsLoading = true;
             try {
+                 // ✅ USE apiService
                 this.availableCoupons = await apiService.get(`/api/coupons/applicable/${this.cartRestaurantId}`);
             } catch (err) {
-                console.error(err.message);
+                console.error("Could not load coupons:", err.message); // Log error silently
+                this.availableCoupons = []; // Ensure it's an empty array on error
             } finally {
                 this.couponsLoading = false;
             }
         },
+        selectAndApplyCoupon(coupon) {
+            this.couponCode = coupon.code;
+            this.applyCoupon();
+        },
         async applyCoupon() {
-            if (!this.couponCode) { this.couponError = "Please enter a code."; return; }
-            this.isApplyingCoupon = true; this.couponError = null;
+            if (!this.couponCode) {
+                this.couponError = "Please enter a coupon code.";
+                return;
+            }
+            this.isApplyingCoupon = true;
+            this.couponError = null;
             try {
+                // ✅ USE apiService
                 const data = await apiService.post('/api/coupons/apply', {
                     code: this.couponCode,
                     subtotal: this.subtotal,
@@ -174,6 +255,8 @@ const CustomerCheckoutPage = {
                 this.appliedCoupon = this.couponCode;
             } catch (err) {
                 this.couponError = err.message;
+                this.discountAmount = 0; // Reset discount on error
+                this.appliedCoupon = null;
             } finally {
                 this.isApplyingCoupon = false;
             }
@@ -181,29 +264,34 @@ const CustomerCheckoutPage = {
         async placeOrder() {
             this.isPlacing = true; this.error = null;
             if (this.isScheduling && !this.selectedTime) {
-                this.error = "Please select a time slot."; this.isPlacing = false; return;
+                this.error = "Please select a time slot for your scheduled order.";
+                this.isPlacing = false; return;
             }
-            const payload = {
+            
+            // Construct the payload exactly as the backend expects
+            let payload = {
                 restaurant_id: this.cartRestaurantId,
                 order_type: this.orderType,
                 items: this.cartItems.map(item => ({ menu_item_id: item.id, quantity: item.quantity })),
-                coupon_code: this.appliedCoupon,
-                scheduled_time: this.selectedTime
+                coupon_code: this.appliedCoupon, // Send the code if applied
+                is_scheduled: this.isScheduling, // Send boolean flag
+                // Send ISO 8601 string ONLY if scheduling
+                scheduled_time: this.isScheduling && this.selectedTime ? this.selectedTime : null 
             };
+
             try {
+                // ✅ USE apiService
                 const data = await apiService.post('/api/orders', payload);
+                
                 this.$store.dispatch('clearCart');
-                alert(data.message);
+                alert(data.message || "Order placed successfully!"); // Use backend message
                 this.$router.push({ name: 'OrderDetail', params: { id: data.order_id } });
             } catch (err) {
-                this.error = err.message;
+                this.error = "Error placing order: " + err.message;
             } finally {
                 this.isPlacing = false;
             }
         }
-    },
-    async mounted() {
-        await this.fetchAvailableSlots();
-        await this.fetchApplicableCoupons();
     }
 };
+
