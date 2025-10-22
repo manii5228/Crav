@@ -6,7 +6,7 @@
     <!-- Vue.js, Vue Router, Vuex (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
     <script src="https://unpkg.com/vue-router@3/dist/vue-router.js"></script>
-    <script src="https://unpkg.com/vuex@3.6.2/dist/vuex.js"></script> <!-- Ensure Vuex version matches -->
+    <script src="https://unpkg.com/vuex@3.6.2/dist/vuex.js"></script>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css">
@@ -26,18 +26,25 @@
     <title>Crav</title>
 
     <script>
-        // Define the API URL globally - Render automatically sets environment variables
-        // We use || for local development fallback
-        // Use a placeholder that Flask/Render will replace, OR use the actual Render URL directly for simplicity
-         window.API_URL = "{{ API_BASE_URL }}"; // Option 1: Replaced by backend (requires unified service)
-        // window.API_URL = "https://crav-api.onrender.com"; // Option 2: Hardcode Render URL (works with separate services)
+        // Define the API URL globally - Render automatically sets environment variables OR Flask replaces it
+         window.API_URL = "{{ API_BASE_URL }}"; // Option 1: Replaced by backend (requires unified service & routes.py update)
+        // window.API_URL = ""; // Option 2: Use relative paths if frontend/backend are same domain (unified service)
+        // window.API_URL = "https://crav-api.onrender.com"; // Option 3: Hardcode Render API URL (if using separate services)
+
+        // Choose ONE of the options above based on your final Render setup (Unified Service is recommended, use Option 1 or 2)
+        // If using unified, ensure routes.py is serving index.html via render_template correctly.
     </script>
      <style>
         /* Simple CSS for loading state */
         #loading-indicator {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.8); display: flex;
+            background: rgba(255, 255, 255, 0.9); display: flex;
             justify-content: center; align-items: center; z-index: 9999;
+            transition: opacity 0.5s ease; /* Add transition */
+        }
+        #loading-indicator.hidden {
+             opacity: 0;
+             pointer-events: none; /* Make it non-interactive when hidden */
         }
         .spinner-border { color: #FF7043; } /* Use brand color */
     </style>
@@ -54,29 +61,27 @@
 
     <!--
     ============================================================
-    CRITICAL SCRIPT LOADING ORDER:
-    1. Vuex Store (Defines the global `store`)
-    2. API Service (Needs `store` to get tokens)
-    3. Vue Router (Needs `store` for navigation guards)
-    4. Components (Needed by Pages)
-    5. Pages (Needed by Router)
-    6. Main App Instance (Needs Router, Store, and Navbar)
+    DEFINITIVE SCRIPT LOADING ORDER:
+    1. Core Utilities (Store, API Helper)
+    2. Global Components
+    3. Page Components
+    4. Router Definition (Needs Pages)
+    5. Main App Instance (Needs Router, Store, Components)
     ============================================================
     -->
 
     <!-- Core Utilities -->
-    <script src="/utils/store.js"></script>   <!-- ✅ LOAD STORE FIRST -->
-    <script src="/utils/api.js"></script>    <!-- ✅ LOAD API HELPER SECOND -->
-    <script src="/utils/router.js"></script>  <!-- ✅ LOAD ROUTER THIRD -->
+    <script src="/utils/store.js"></script>
+    <script src="/utils/api.js"></script>
 
-    <!-- Global Components (Load before Pages that use them) -->
+    <!-- Global Components -->
     <script src="/components/Navbar.js"></script>
     <script src="/components/RestaurantCard.js"></script>
     <script src="/components/MenuItem.js"></script>
     <script src="/components/CartItem.js"></script>
     <script src="/components/ReviewForm.js"></script>
 
-    <!-- Page Components (Keep alphabetical or grouped by role for clarity) -->
+    <!-- Page Components -->
     <!-- Admin Pages -->
     <script src="/pages/admin/AdminCouponManagementPage.js"></script>
     <script src="/pages/admin/AdminDashboardPage.js"></script>
@@ -86,7 +91,6 @@
     <script src="/pages/admin/AdminRestaurantManagementPage.js"></script>
     <script src="/pages/admin/AdminReviewManagementPage.js"></script>
     <script src="/pages/admin/AdminUserManagementPage.js"></script>
-
     <!-- Customer Pages -->
     <script src="/pages/customer/CustomerCartPage.js"></script>
     <script src="/pages/customer/CustomerCheckoutPage.js"></script>
@@ -99,9 +103,6 @@
     <script src="/pages/customer/CustomerRegisterPage.js"></script>
     <script src="/pages/customer/CustomerRestaurantDetailPage.js"></script>
     <script src="/pages/customer/CustomerRewardsPage.js"></script>
-    <!-- <script src="/pages/customer/CustomerReviewPage.js"></script> --> <!-- Ensure this is deleted or commented out -->
-
-
     <!-- Restaurant Pages -->
     <script src="/pages/restaurant/RestaurantAnalyticsPage.js"></script>
     <script src="/pages/restaurant/RestaurantDashboardPage.js"></script>
@@ -113,18 +114,16 @@
     <script src="/pages/restaurant/RestaurantRegisterPage.js"></script>
     <script src="/pages/restaurant/RestaurantTimeSlotManagementPage.js"></script>
 
-    <!-- Main Vue App Instance -->
-    <script src="/app.js"></script>
+    <!-- Router Definition -->
+    <script src="/utils/router.js"></script> <!-- ✅ LOAD ROUTER AFTER PAGES -->
 
-    <!-- Bootstrap JS (jQuery and Popper.js are dependencies) -->
+    <!-- Main Vue App Instance -->
+    <script src="/app.js"></script> <!-- ✅ LOAD APP.JS LAST -->
+
+    <!-- Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"></script>
-
-    <!-- 
-        REMOVED the problematic script block. 
-        This logic should be moved to the mounted() hook in app.js 
-    -->
 
 </body>
 </html>
