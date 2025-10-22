@@ -2059,3 +2059,19 @@ def upload_image():
 # --- CUSTOMER API RESOURCES ---
 # --- ===================== ---
 api.add_resource(RestaurantListAPI, '/api/restaurants')
+
+# This MUST be the VERY LAST route defined in this file.
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_vue_app(path):
+    """
+    Serves the index.html file for all non-API, non-static file routes.
+    Vue Router will handle the frontend routing.
+    API_BASE_URL is set to an empty string because API calls use relative paths.
+    """
+    if os.path.exists(os.path.join(app.static_folder, path)):
+         
+         pass # Let the other route handle it
+
+    return render_template('index.html', API_BASE_URL="")s
+
