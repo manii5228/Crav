@@ -10,25 +10,27 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css">
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Your Custom CSS & Font Awesome -->
-    <link rel="stylesheet" href="/assets/style.css"> 
+    <link rel="stylesheet" href="/assets/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <!-- SheetJS (for Excel generation) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
+
     <title>Crav</title>
 
     <script>
         // Define the API URL globally - Render automatically sets environment variables
         // We use || for local development fallback
-        window.API_URL = "{{ API_BASE_URL }}"; // This will be replaced by Render/Flask
+        // Use a placeholder that Flask/Render will replace, OR use the actual Render URL directly for simplicity
+         window.API_URL = "{{ API_BASE_URL }}"; // Option 1: Replaced by backend (requires unified service)
+        // window.API_URL = "https://crav-api.onrender.com"; // Option 2: Hardcode Render URL (works with separate services)
     </script>
      <style>
         /* Simple CSS for loading state */
@@ -50,7 +52,7 @@
     <!-- Main Vue App Container -->
     <div id="app"></div>
 
-    <!-- 
+    <!--
     ============================================================
     CRITICAL SCRIPT LOADING ORDER:
     1. Vuex Store (Defines the global `store`)
@@ -72,13 +74,13 @@
     <script src="/components/RestaurantCard.js"></script>
     <script src="/components/MenuItem.js"></script>
     <script src="/components/CartItem.js"></script>
-    <script src="/components/ReviewForm.js"></script> 
+    <script src="/components/ReviewForm.js"></script>
 
     <!-- Page Components (Keep alphabetical or grouped by role for clarity) -->
     <!-- Admin Pages -->
     <script src="/pages/admin/AdminCouponManagementPage.js"></script>
     <script src="/pages/admin/AdminDashboardPage.js"></script>
-    <script src="/pages/admin/AdminLoginPage.js"></script> 
+    <script src="/pages/admin/AdminLoginPage.js"></script>
     <script src="/pages/admin/AdminOrderManagementPage.js"></script>
     <script src="/pages/admin/AdminReportsPage.js"></script>
     <script src="/pages/admin/AdminRestaurantManagementPage.js"></script>
@@ -112,22 +114,18 @@
     <script src="/pages/restaurant/RestaurantTimeSlotManagementPage.js"></script>
 
     <!-- Main Vue App Instance -->
-    <script src="/app.js"></script> 
+    <script src="/app.js"></script>
 
     <!-- Bootstrap JS (jQuery and Popper.js are dependencies) -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"></script>
 
-    <script>
-        // Hide loading indicator once Vue is ready
-        app.$nextTick(() => {
-             const loadingIndicator = document.getElementById('loading-indicator');
-             if (loadingIndicator) {
-                 loadingIndicator.style.display = 'none';
-             }
-        });
-    </script>
+    <!-- 
+        REMOVED the problematic script block. 
+        This logic should be moved to the mounted() hook in app.js 
+    -->
+
 </body>
 </html>
 
