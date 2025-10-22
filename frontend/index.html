@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Your Custom CSS & Font Awesome -->
+    <!-- Your Custom CSS & Font Awesome (Relative Paths) -->
     <link rel="stylesheet" href="/assets/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
@@ -26,27 +26,24 @@
     <title>Crav</title>
 
     <script>
-        // Define the API URL globally - Render automatically sets environment variables OR Flask replaces it
-         window.API_URL = "{{ API_BASE_URL }}"; // Option 1: Replaced by backend (requires unified service & routes.py update)
-        // window.API_URL = ""; // Option 2: Use relative paths if frontend/backend are same domain (unified service)
-        // window.API_URL = "https://crav-api.onrender.com"; // Option 3: Hardcode Render API URL (if using separate services)
-
-        // Choose ONE of the options above based on your final Render setup (Unified Service is recommended, use Option 1 or 2)
-        // If using unified, ensure routes.py is serving index.html via render_template correctly.
+        // --- API URL FOR UNIFIED SERVICE ---
+        // Since Flask serves both frontend and API from the same domain,
+        // we use relative paths (empty base URL).
+        window.API_URL = "";
     </script>
      <style>
-        /* Simple CSS for loading state */
+        /* Loading indicator styles */
         #loading-indicator {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.9); display: flex;
             justify-content: center; align-items: center; z-index: 9999;
-            transition: opacity 0.5s ease; /* Add transition */
+            transition: opacity 0.5s ease;
         }
         #loading-indicator.hidden {
              opacity: 0;
-             pointer-events: none; /* Make it non-interactive when hidden */
+             pointer-events: none;
         }
-        .spinner-border { color: #FF7043; } /* Use brand color */
+        .spinner-border { color: #FF7043; }
     </style>
 </head>
 <body>
@@ -115,10 +112,10 @@
     <script src="/pages/restaurant/RestaurantTimeSlotManagementPage.js"></script>
 
     <!-- Router Definition -->
-    <script src="/utils/router.js"></script> <!-- ✅ LOAD ROUTER AFTER PAGES -->
+    <script src="/utils/router.js"></script> <!-- Load AFTER pages -->
 
     <!-- Main Vue App Instance -->
-    <script src="/app.js"></script> <!-- ✅ LOAD APP.JS LAST -->
+    <script src="/app.js"></script> <!-- Load LAST -->
 
     <!-- Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
