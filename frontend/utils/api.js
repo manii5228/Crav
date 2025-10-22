@@ -1,7 +1,9 @@
-// This is your new centralized API helper.
-// It automatically adds the backend URL and authentication token to every request.
+// This is your centralized API helper for the UNIFIED deployment model.
+// It automatically adds the authentication token and handles responses.
+// Assumes 'store' is a global variable from store.js
 
 const apiService = {
+    // Standard HTTP methods
     get(endpoint) {
         return this.request('GET', endpoint);
     },
@@ -17,11 +19,17 @@ const apiService = {
     delete(endpoint) {
         return this.request('DELETE', endpoint);
     },
-    async request(method, endpoint, body = null) {
-        const headers = {
-            'Content-Type': 'application/json'
-        };
-        const token = store.state.token; // Access the token from the global store
+
+    // Core request function
+    async request(method, endpoint, body = null, responseType = 'json') { // Added responseType
+        const headers = {};
+        // Only add Content-Type for methods that typically send a body
+        if (body) {
+             headers['Content-Type'] = 'application/json';
+        }
+
+        // Get token from the global Vuex store
+        const token = store.state.token;
         if (token) {
             headers['Authentication-Token'] = token;
         }
@@ -31,25 +39,57 @@ const apiService = {
             headers: headers,
         };
 
+        // Add body if it exists
         if (body) {
             config.body = JSON.stringify(body);
         }
 
-        // The most important part: using the global API_URL
-        const response = await fetch(`${window.API_URL}${endpoint}`, config);
+        try {
+            // --- CRITICAL CHANGE FOR UNIFIED MODEL ---
+            // Use the relative endpoint directly. The browser automatically uses the current domain.
+            const response = await fetch(endpoint, config);
+            // --- END OF CHANGE ---
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred.' }));
-            throw new Error(errorData.message);
-        }
+            // Handle non-ok responses (like 401, 404, 500)
+            if (!response.ok) {
+                let errorData = { message: `Request failed with status: ${response.status}` };
+                try {
+                    // Try to parse error JSON from the backend
+                    errorData = await response.json();
+                } catch (e) {
+                    // If parsing fails, use the status text
+                    errorData.message = response.statusText || errorData.message;
+                }
+                throw new Error(errorData.message);
+            }
 
-        // For DELETE requests or other requests that might not have a body
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.indexOf("application/json") !== -1) {
-            return response.json();
-        } else {
-            return; // Return nothing if there's no JSON body
+            // Handle different expected response types
+            if (responseType === 'blob') {
+                 // Return the raw blob for file downloads
+                 return response.blob();
+            }
+
+            // Handle empty responses (like successful DELETE or PUT without content)
+            const contentType = response.headers.get("content-type");
+            if (response.status === 204 || !contentType) { // 204 No Content
+                return null; // Return null or undefined for empty responses
+            }
+
+            // Handle JSON responses
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                return response.json();
+            }
+
+            // Handle unexpected content types if necessary
+            console.warn("Received unexpected content type:", contentType);
+            return response.text(); // Fallback to text if not JSON
+
+        } catch (error) {
+            console.error(`API ${method} request to ${endpoint} failed:`, error);
+            // Re-throw the error so the component can catch it
+            throw error;
         }
     }
 };
+// NOTE: No export default needed
 
