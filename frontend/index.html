@@ -17,12 +17,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
     <!-- Your Custom Stylesheet -->
-    <!-- This path must be relative from the 'frontend' folder, which Flask now serves as static root -->
     <link rel="stylesheet" href="/assets/style.css">
 
     <!-- Loading Indicator Styles -->
     <style>
-        /* This style block ensures the loading indicator is visible while scripts load */
         #loadingIndicator {
             display: flex;
             justify-content: center;
@@ -42,12 +40,8 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* Hide the main app content until it's ready */
-        #app {
-            display: none;
-        }
+        #app { display: none; }
     </style>
-
 </head>
 <body>
 
@@ -103,6 +97,10 @@
     <script src="/pages/customer/CustomerOrderHistoryPage.js"></script>
     <script src="/pages/customer/CustomerProfilePage.js"></script>
     <script src="/pages/customer/CustomerRegisterPage.js"></script>
+    <!-- 
+      FIX: The duplicate CustomerRestaurantDetailPage.js was removed from here. 
+      It is now loaded only once, below.
+    -->
     <script src="/pages/customer/CustomerRestaurantDetailPage.js"></script>
     <script src="/pages/customer/CustomerRewardsPage.js"></script>
 
@@ -117,7 +115,7 @@
     <script src="/pages/restaurant/RestaurantRegisterPage.js"></script>
     <script src="/pages/restaurant/RestaurantTimeSlotManagementPage.js"></script>
 
-    <!-- 5. Router (Must load AFTER pages) -->
+    <!-- 5. Router (Must load AFTER all pages) -->
     <script src="/utils/router.js"></script>
 
     <!-- 6. Main App Instance (Must load LAST) -->
