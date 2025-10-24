@@ -1,3 +1,5 @@
+// NOTE: No imports needed. Assumes apiService is global.
+
 const AdminReviewManagementPage = {
     template: `
         <div class="admin-container">
@@ -54,9 +56,11 @@ const AdminReviewManagementPage = {
             this.loading = true;
             this.error = null;
             try {
+                // Use apiService.get
                 this.reviews = await apiService.get('/api/admin/reviews');
             } catch (err) {
                 this.error = err.message;
+                 console.error("Error fetching reviews:", err);
             } finally {
                 this.loading = false;
             }
@@ -64,10 +68,13 @@ const AdminReviewManagementPage = {
         async deleteReview(reviewId) {
             if (confirm('Are you sure you want to permanently delete this review?')) {
                 try {
+                    // Use apiService.delete
                     const data = await apiService.delete(`/api/admin/reviews/${reviewId}`);
-                    alert(data.message);
-                    this.fetchReviews();
+                    // Handle potentially empty response for DELETE
+                    alert(data ? data.message : 'Review deleted successfully.');
+                    this.fetchReviews(); // Refresh list
                 } catch (err) {
+                     console.error("Error deleting review:", err);
                     alert('Error: ' + err.message);
                 }
             }
@@ -77,3 +84,5 @@ const AdminReviewManagementPage = {
         this.fetchReviews();
     }
 };
+// NOTE: No export default needed
+

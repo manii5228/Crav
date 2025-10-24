@@ -1,3 +1,5 @@
+// NOTE: No imports needed. Assumes $, apiService, and Vuex store are global.
+
 const AdminRestaurantManagementPage = {
     template: `
         <div class="admin-container">
@@ -19,7 +21,7 @@ const AdminRestaurantManagementPage = {
                 <div class="card-header bg-white">
                     <div class="row align-items-center">
                         <div class="col-md-4">
-                            <input type="text" v-model="searchQuery" @input="fetchRestaurants" class="form-control" placeholder="Search by name, owner, or city...">
+                            <input type="text" v-model="searchQuery" @input="debouncedFetchRestaurants" class="form-control" placeholder="Search by name, owner, or city...">
                         </div>
                         <div class="col-md-3">
                             <select class="form-control" v-model="filterStatus" @change="fetchRestaurants">
@@ -36,11 +38,7 @@ const AdminRestaurantManagementPage = {
                         <table class="table table-hover">
                             <thead class="thead-light">
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Restaurant Name</th>
-                                    <th>Owner</th>
-                                    <th>City</th>
-                                    <th>Status</th>
+                                    <th>ID</th><th>Restaurant Name</th><th>Owner</th><th>City</th><th>Status</th>
                                     <th class="text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -72,6 +70,7 @@ const AdminRestaurantManagementPage = {
                 </div>
             </div>
 
+            <!-- Modal for Add/Edit Restaurant -->
             <div class="modal fade" id="restaurantModal" tabindex="-1" role="dialog">
                 <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content">
@@ -103,7 +102,7 @@ const AdminRestaurantManagementPage = {
                                     <label>City</label>
                                     <input type="text" class="form-control" v-model="currentRestaurant.city" required>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <button type="button" class="btn btn-sm btn-outline-secondary" @click="geocodeAddress" :disabled="isGeocoding">
                                         <span v-if="isGeocoding" class="spinner-border spinner-border-sm"></span>
@@ -140,38 +139,38 @@ const AdminRestaurantManagementPage = {
             restaurants: [],
             isEditMode: false,
             currentRestaurant: {
-                id: null,
-                name: '',
-                ownerEmail: '',
-                address: '',
-                city: '',
-                latitude: null,
-                longitude: null
+                id: null, name: '', ownerEmail: '', address: '', city: '',
+                latitude: null, longitude: null
             },
             isExporting: false,
-            isGeocoding: false, 
+            isGeocoding: false,
             modalError: null,
+            debounceTimer: null,
         };
     },
-    mounted() {
-        this.fetchRestaurants();
-    },
     methods: {
+        debouncedFetchRestaurants() {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = setTimeout(() => {
+                this.fetchRestaurants();
+            }, 500);
+        },
         async fetchRestaurants() {
             this.error = null;
+            // Only set loading on initial load
+            if (this.restaurants.length === 0) {
+                 this.loading = true;
+            }
             try {
-                const token = this.$store.state.token;
-                // ✅ FIX #1: Simplified the URL creation
-                const url = new URL(`${window.API_URL}/api/admin/restaurants`);
-                if (this.searchQuery) url.searchParams.append('search', this.searchQuery);
-                if (this.filterStatus) url.searchParams.append('status', this.filterStatus);
+                const params = new URLSearchParams();
+                if (this.searchQuery) params.append('search', this.searchQuery);
+                if (this.filterStatus && this.filterStatus !== 'All') params.append('status', this.filterStatus);
 
-                const response = await fetch(url, { headers: { 'Authentication-Token': token } });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || "Failed to fetch restaurants.");
-                this.restaurants = data;
+                // Use apiService.get
+                this.restaurants = await apiService.get(`/api/admin/restaurants?${params.toString()}`);
             } catch (err) {
                 this.error = err.message;
+                 console.error("Error fetching restaurants:", err);
             } finally {
                 this.loading = false;
             }
@@ -180,30 +179,36 @@ const AdminRestaurantManagementPage = {
             const statusMap = { 'Verified': 'badge-success', 'Pending': 'badge-warning', 'Blocked': 'badge-secondary' };
             return statusMap[status] || 'badge-light';
         },
-        async handleAction(url, method, confirmMessage) {
+        // Centralized action handler using apiService
+        async handleAction(method, endpoint, confirmMessage, successMessage) {
             if (confirmMessage && !confirm(confirmMessage)) return;
             try {
-                const token = this.$store.state.token;
-                const response = await fetch(url, { method, headers: { 'Authentication-Token': token } });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message);
-                alert(data.message);
-                this.fetchRestaurants();
+                 let data;
+                 // Pass empty body for PATCH/DELETE if backend doesn't expect one
+                 if (method === 'patch' || method === 'delete') {
+                     data = await apiService[method](endpoint, {}); // Use lowercase method name
+                 } else {
+                      // Handle other methods if needed (e.g., PUT with body)
+                      throw new Error(`Unsupported method ${method} in handleAction`);
+                 }
+                 alert(data ? data.message : successMessage); // Use provided success message if data is null/empty
+                this.fetchRestaurants(); // Refresh list
             } catch (err) {
+                 console.error(`Error performing action ${method} ${endpoint}:`, err);
                 alert('Error: ' + err.message);
             }
         },
         approveRestaurant(restaurant) {
-            this.handleAction(`${window.API_URL}/api/admin/restaurants/${restaurant.id}/verify`, 'PATCH', `Are you sure you want to approve ${restaurant.name}?`);
+            this.handleAction('patch', `/api/admin/restaurants/${restaurant.id}/verify`, `Approve ${restaurant.name}?`, 'Restaurant approved.');
         },
         blockRestaurant(restaurant) {
-            this.handleAction(`${window.API_URL}/api/admin/restaurants/${restaurant.id}/block`, 'PATCH', `Are you sure you want to block ${restaurant.name}?`);
+            this.handleAction('patch', `/api/admin/restaurants/${restaurant.id}/block`, `Block ${restaurant.name}?`, 'Restaurant blocked.');
         },
         unblockRestaurant(restaurant) {
-            this.handleAction(`${window.API_URL}/api/admin/restaurants/${restaurant.id}/unblock`, 'PATCH', `Are you sure you want to unblock ${restaurant.name}?`);
+            this.handleAction('patch', `/api/admin/restaurants/${restaurant.id}/unblock`, `Unblock ${restaurant.name}?`, 'Restaurant unblocked.');
         },
         deleteRestaurant(restaurant) {
-            this.handleAction(`${window.API_URL}/api/admin/restaurants/${restaurant.id}`, 'DELETE', `This will PERMANENTLY delete ${restaurant.name}. Are you sure?`);
+            this.handleAction('delete', `/api/admin/restaurants/${restaurant.id}`, `PERMANENTLY delete ${restaurant.name}?`, 'Restaurant deleted.');
         },
         openAddModal() {
             this.isEditMode = false;
@@ -214,29 +219,40 @@ const AdminRestaurantManagementPage = {
         openEditModal(restaurant) {
             this.isEditMode = true;
             this.modalError = null;
-            this.currentRestaurant = { ...restaurant };
+            // Ensure all expected fields are present, even if null
+            this.currentRestaurant = {
+                 id: restaurant.id,
+                 name: restaurant.name || '',
+                 ownerEmail: restaurant.ownerEmail || '',
+                 address: restaurant.address || '',
+                 city: restaurant.city || '',
+                 latitude: restaurant.latitude !== undefined ? restaurant.latitude : null,
+                 longitude: restaurant.longitude !== undefined ? restaurant.longitude : null,
+            };
             $('#restaurantModal').modal('show');
         },
         async saveRestaurant() {
-            const token = this.$store.state.token;
-            // ✅ FIX #2: Added window.API_URL to both parts of the URL
-            const url = this.isEditMode 
-                ? `${window.API_URL}/api/admin/restaurants/${this.currentRestaurant.id}` 
-                : `${window.API_URL}/api/admin/restaurants`;
-            const method = this.isEditMode ? 'PUT' : 'POST';
+             // Basic validation
+             if (!this.currentRestaurant.name || !this.currentRestaurant.ownerEmail || !this.currentRestaurant.address || !this.currentRestaurant.city) {
+                  this.modalError = "Please fill in all required fields (Name, Owner Email, Address, City).";
+                  return;
+             }
+             this.modalError = null; // Clear previous error
             try {
-                const response = await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json', 'Authentication-Token': token },
-                    body: JSON.stringify(this.currentRestaurant)
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message);
-                alert(data.message);
+                let data;
+                if (this.isEditMode) {
+                    // Use apiService.put
+                    data = await apiService.put(`/api/admin/restaurants/${this.currentRestaurant.id}`, this.currentRestaurant);
+                } else {
+                    // Use apiService.post
+                    data = await apiService.post('/api/admin/restaurants', this.currentRestaurant);
+                }
+                 alert(data.message);
                 $('#restaurantModal').modal('hide');
                 this.fetchRestaurants();
             } catch (err) {
-                this.modalError = 'Error: ' + err.message;
+                 console.error("Error saving restaurant:", err);
+                this.modalError = 'Error: ' + err.message; // Show error inside the modal
             }
         },
         async geocodeAddress() {
@@ -248,17 +264,13 @@ const AdminRestaurantManagementPage = {
             this.modalError = null;
             try {
                 const fullAddress = `${this.currentRestaurant.address}, ${this.currentRestaurant.city}`;
-                const token = this.$store.state.token;
-                const response = await fetch(`${window.API_URL}/api/geocode`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authentication-Token': token },
-                    body: JSON.stringify({ address: fullAddress })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message);
+                // Use apiService.post for consistency
+                const data = await apiService.post(`/api/geocode`, { address: fullAddress });
+
                 this.currentRestaurant.latitude = data.latitude;
                 this.currentRestaurant.longitude = data.longitude;
             } catch (err) {
+                 console.error("Error geocoding:", err);
                 this.modalError = err.message;
             } finally {
                 this.isGeocoding = false;
@@ -267,13 +279,10 @@ const AdminRestaurantManagementPage = {
         async exportData() {
             this.isExporting = true;
             try {
-                const token = this.$store.state.token;
-                const response = await fetch(`${window.API_URL}/api/admin/restaurants/export`, { headers: { 'Authentication-Token': token } });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to download file.');
-                }
-                const blob = await response.blob();
+                 // Use apiService.download
+                 const blob = await apiService.download('/api/admin/restaurants/export');
+                 if (!blob) throw new Error("Received empty export file.");
+
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
@@ -284,10 +293,19 @@ const AdminRestaurantManagementPage = {
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
             } catch (err) {
+                 console.error('Error exporting restaurant data:', err);
                 alert('Error exporting data: ' + err.message);
             } finally {
                 this.isExporting = false;
             }
         }
-    }
+    },
+    mounted() {
+        this.fetchRestaurants();
+    },
+     beforeDestroy() {
+         clearTimeout(this.debounceTimer);
+     }
 };
+// NOTE: No export default needed
+

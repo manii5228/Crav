@@ -1,3 +1,5 @@
+// NOTE: No imports needed. Assumes apiService and Vuex store are global.
+
 const CustomerOrderDetailPage = {
     template: `
         <div class="container my-5">
@@ -33,6 +35,7 @@ const CustomerOrderDetailPage = {
                                         <span class="text-muted">Status:</span>
                                         <span class="status-badge" :class="order.status.toLowerCase()">{{ order.status }}</span>
                                     </li>
+
                                     <li v-if="order.is_scheduled && order.scheduled_date" class="d-flex justify-content-between py-2 mt-2 bg-light px-3 rounded">
                                         <span class="text-muted"><i class="fas fa-calendar-alt mr-2"></i>Scheduled For:</span>
                                         <strong class="text-brand">{{ order.scheduled_date }} at {{ order.scheduled_time }}</strong>
@@ -72,16 +75,31 @@ const CustomerOrderDetailPage = {
             </div>
         </div>
     `,
-    data() { return { loading: true, error: null, order: null }; },
+    data() {
+        return {
+            loading: true,
+            error: null,
+            order: null
+        };
+    },
     async mounted() {
-        this.loading = true; this.error = null;
+        this.loading = true;
+        this.error = null;
         try {
+            // Get the order ID from the URL parameter
             const orderId = this.$route.params.id;
+            
+            // ✅ UPDATED: Use apiService.get
+            // It automatically handles the token and relative path
             this.order = await apiService.get(`/api/orders/${orderId}`);
+            
         } catch (err) {
             this.error = err.message;
+            console.error("Error fetching order details:", err);
         } finally {
             this.loading = false;
         }
     }
 };
+// NOTE: No export default needed
+

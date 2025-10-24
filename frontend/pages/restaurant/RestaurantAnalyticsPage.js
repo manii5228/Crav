@@ -1,3 +1,5 @@
+// NOTE: No imports needed. Assumes apiService is global.
+
 const RestaurantAnalyticsPage = {
     template: `
         <div class="admin-container">
@@ -16,7 +18,7 @@ const RestaurantAnalyticsPage = {
                             </div>
                         </div>
                     </div>
-                     <div class="col-md-4 mb-4">
+                    <div class="col-md-4 mb-4">
                         <div class="card stat-card h-100">
                             <div class="card-body">
                                 <h6 class="text-muted">TOTAL ORDERS (Completed)</h6>
@@ -39,7 +41,7 @@ const RestaurantAnalyticsPage = {
                         <div class="card h-100">
                             <div class="card-body">
                                 <h4 class="card-title">Daily Sales (Last 7 Days)</h4>
-                                <div v-if="dailySalesData.length > 0" class="chart-container">
+                                <div v-if="dailySalesData.length > 0 && maxSales > 0" class="chart-container">
                                     <div v-for="data in dailySalesData" :key="data.day" class="chart-bar-wrapper">
                                         <div class="chart-bar" :style="{ height: data.height + '%' }">
                                             <span class="bar-value">₹{{ data.sales.toLocaleString('en-IN') }}</span>
@@ -80,15 +82,24 @@ const RestaurantAnalyticsPage = {
         };
     },
     computed: {
+        maxSales() {
+            if (!this.rawDailySales || this.rawDailySales.length === 0) return 0;
+            const sales = this.rawDailySales.map(d => parseFloat(d.sales)).filter(s => !isNaN(s));
+            return sales.length > 0 ? Math.max(...sales) : 0;
+        },
         dailySalesData() {
-            if (!this.rawDailySales || this.rawDailySales.length === 0) return [];
-            const maxSales = Math.max(...this.rawDailySales.map(d => d.sales));
-            if (maxSales === 0) return this.rawDailySales.map(d => ({ ...d, height: 0 }));
+            if (!this.rawDailySales || this.rawDailySales.length === 0 || this.maxSales <= 0) {
+                 return this.rawDailySales.map(d => ({ ...d, height: 0, sales: parseFloat(d.sales) || 0 }));
+            }
             
-            return this.rawDailySales.map(data => ({
-                ...data,
-                height: (data.sales / maxSales) * 100
-            }));
+            return this.rawDailySales.map(data => {
+                const sales = parseFloat(data.sales) || 0;
+                return {
+                    ...data,
+                    sales: sales,
+                    height: (sales / this.maxSales) * 100
+                }
+            });
         }
     },
     methods: {
@@ -96,12 +107,14 @@ const RestaurantAnalyticsPage = {
             this.loading = true;
             this.error = null;
             try {
+                // ✅ UPDATED: Use apiService.get
                 const data = await apiService.get('/api/restaurant/analytics');
                 this.stats = data.stats;
                 this.rawDailySales = data.dailySales;
                 this.popularItems = data.popularItems;
             } catch (err) {
                 this.error = err.message;
+                console.error("Error fetching restaurant analytics:", err);
             } finally {
                 this.loading = false;
             }
@@ -111,3 +124,5 @@ const RestaurantAnalyticsPage = {
         this.fetchAnalyticsData();
     }
 };
+// NOTE: No export default needed
+

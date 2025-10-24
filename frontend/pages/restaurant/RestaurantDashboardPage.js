@@ -1,3 +1,5 @@
+// NOTE: No imports needed. Assumes apiService and Vuex store are global.
+
 const RestaurantDashboardPage = {
     template: `
         <div class="admin-container">
@@ -16,7 +18,7 @@ const RestaurantDashboardPage = {
                             </div>
                         </div>
                     </div>
-                     <div class="col-md-4 mb-4">
+                    <div class="col-md-4 mb-4">
                         <div class="card stat-card h-100">
                             <div class="card-body">
                                 <h6 class="text-muted">TODAY'S ORDERS</h6>
@@ -100,12 +102,27 @@ const RestaurantDashboardPage = {
             this.loading = true;
             this.error = null;
             try {
+                // ✅ UPDATED: Use apiService.get
                 const data = await apiService.get('/api/restaurant/dashboard');
-                this.stats = data.stats;
-                this.recentOrders = data.recentOrders;
-                this.popularItems = data.popularItems;
+                
+                // Add defensive checks for data structure
+                if (data.stats) {
+                    this.stats = data.stats;
+                }
+                if (Array.isArray(data.recentOrders)) {
+                    this.recentOrders = data.recentOrders;
+                }
+                if (Array.isArray(data.popularItems)) {
+                    this.popularItems = data.popularItems;
+                }
+
             } catch (err) {
                 this.error = err.message;
+                 // Special handling for 404 (e.g., no restaurant profile yet)
+                 if (err.message.includes("404")) {
+                     this.error = "Restaurant profile not found. Please contact support or complete your registration.";
+                 }
+                 console.error("Error fetching restaurant dashboard:", err);
             } finally {
                 this.loading = false;
             }
@@ -115,3 +132,5 @@ const RestaurantDashboardPage = {
         this.fetchDashboardData();
     }
 };
+// NOTE: No export default needed
+

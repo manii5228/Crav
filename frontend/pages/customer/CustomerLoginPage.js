@@ -1,3 +1,5 @@
+// NOTE: No imports needed. Assumes Vuex store and router are global.
+
 const CustomerLoginPage = {
     template: `
         <div class="login-container">
@@ -38,8 +40,8 @@ const CustomerLoginPage = {
     `,
     data() {
         return {
-            email: 'admin@email.com',
-            password: 'admin123',
+            email: 'admin@email.com', // Default for easier testing
+            password: 'admin123', // Default for easier testing
             error: null,
             isLoading: false,
         };
@@ -49,14 +51,16 @@ const CustomerLoginPage = {
             this.isLoading = true;
             this.error = null;
             try {
-                // 1. Dispatch the login action and WAIT for it to complete.
-                // The action now returns the user object on success.
+                // Call the 'login' action from the Vuex store.
+                // This action now uses apiService and is robust.
+                // We 'await' it to ensure it completes before we redirect.
                 const user = await this.$store.dispatch('login', {
                     email: this.email,
                     password: this.password
                 });
 
-                // 2. Check the user's roles from the returned data and redirect.
+                // This code only runs AFTER the login is successful and the token is stored.
+                // The 'login' action returns the user object, so we can check roles.
                 if (user && user.roles.includes('admin')) {
                     this.$router.push('/admin/dashboard');
                 } else if (user && user.roles.includes('owner')) {
@@ -66,7 +70,7 @@ const CustomerLoginPage = {
                 }
 
             } catch (err) {
-                // If the action throws an error (handled by apiService), it will be caught here.
+                // If apiService or the store action throws an error, it will be caught here.
                 this.error = err.message;
             } finally {
                 this.isLoading = false;
@@ -74,4 +78,5 @@ const CustomerLoginPage = {
         }
     }
 };
+// NOTE: No export default needed
 

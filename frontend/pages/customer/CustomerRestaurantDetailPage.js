@@ -1,4 +1,9 @@
+// NOTE: No imports needed. Assumes MenuItem, apiService, and Vuex store are global.
+
 const CustomerRestaurantDetailPage = {
+    components: {
+        'menu-item': MenuItem // Assumes MenuItem is globally available
+    },
     template: `
         <div>
             <div v-if="loading" class="text-center my-5">
@@ -64,29 +69,34 @@ const CustomerRestaurantDetailPage = {
             </div>
         </div>
     `,
-    components: {
-        'menu-item': MenuItem
-    },
     data() {
         return {
-            loading: true, error: null, restaurant: null, isFavorite: false,
-            reviewsLoading: true, reviews: []
+            loading: true,
+            error: null,
+            restaurant: null,
+            isFavorite: false,
+            reviewsLoading: true,
+            reviews: []
         };
     },
     computed: {
         ...Vuex.mapGetters(['userRoles']),
         isCustomer() {
+            // Safely check for userRoles
             return this.userRoles && this.userRoles.includes('customer');
         }
     },
     methods: {
         async fetchRestaurantDetails() {
-            this.loading = true; this.error = null;
+            this.loading = true;
+            this.error = null;
             try {
                 const restaurantId = this.$route.params.id;
+                // ✅ UPDATED: Use apiService.get
                 this.restaurant = await apiService.get(`/api/restaurants/${restaurantId}`);
             } catch (err) {
                 this.error = err.message;
+                console.error("Error fetching restaurant details:", err);
             } finally {
                 this.loading = false;
             }
@@ -94,54 +104,71 @@ const CustomerRestaurantDetailPage = {
         async fetchReviews() {
             this.reviewsLoading = true;
             try {
+                // ✅ UPDATED: Use apiService.get
                 this.reviews = await apiService.get(`/api/restaurants/${this.restaurant.id}/reviews`);
             } catch (err) {
                 console.error("Could not fetch reviews:", err.message);
+                // Silently fail on reviews, don't show a major error
             } finally {
                 this.reviewsLoading = false;
             }
         },
         async checkIfFavorite() {
+            // Only check if the user is authenticated
             if (!this.$store.getters.isAuthenticated) return;
             try {
+                // ✅ UPDATED: Use apiService.get
                 const favorites = await apiService.get('/api/favorites');
-                if (favorites.some(fav => fav.id === this.restaurant.id)) {
+                if (favorites && Array.isArray(favorites) && favorites.some(fav => fav.id === this.restaurant.id)) {
                     this.isFavorite = true;
                 }
             } catch (err) {
-                console.error(err);
+                console.error("Error checking favorites status:", err);
             }
         },
         async toggleFavorite() {
+            // This toggle should only be clickable by authenticated customers
+            if (!this.isCustomer) {
+                 alert("Please log in as a customer to add favorites.");
+                 return;
+            }
+            
             const method = this.isFavorite ? 'delete' : 'post';
             try {
+                // ✅ UPDATED: Use apiService[method]
                 const data = await apiService[method](`/api/favorites/${this.restaurant.id}`);
                 this.isFavorite = !this.isFavorite;
-                alert(data.message);
+                alert(data.message || (this.isFavorite ? 'Added to favorites!' : 'Removed from favorites.'));
             } catch (err) {
                 alert('Error: ' + err.message);
+                console.error("Error toggling favorite:", err);
             }
         },
         handleAddToCart(item) {
+            // This method is correct, it uses the store
             if (!this.$store.getters.isAuthenticated) {
                 alert("Please log in to add items to your cart.");
                 this.$router.push('/login');
                 return;
             }
-            this.$store.dispatch('addItemToCart', { 
-                item: item, 
-                restaurantId: this.restaurant.id 
+            this.$store.dispatch('addItemToCart', {
+                item: item,
+                restaurantId: this.restaurant.id // Pass the restaurant ID from the main component
             });
             alert(`${item.name} has been added to your cart!`);
         }
     },
     async mounted() {
+        // Run all fetch operations in sequence
         await this.fetchRestaurantDetails();
+        // Only proceed if restaurant details were fetched successfully
         if (this.restaurant) {
             await this.fetchReviews();
-            if (this.isCustomer) { 
+            if (this.isCustomer) {
                 await this.checkIfFavorite();
             }
         }
     }
 };
+// NOTE: No export default needed
+

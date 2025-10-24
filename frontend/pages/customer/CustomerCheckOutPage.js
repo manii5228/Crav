@@ -1,3 +1,5 @@
+// NOTE: No imports needed. Assumes apiService, Vuex store are global.
+
 const CustomerCheckoutPage = {
     template: `
         <div class="container my-5">
@@ -62,9 +64,10 @@ const CustomerCheckoutPage = {
                                         </select>
                                     </div>
                                 </div>
-                                <p v-if="!slotsLoading && availableDays.length === 0 && !slotsError" class="text-muted">No scheduling slots available for this restaurant.</p>
+                                <div v-if="!slotsLoading && availableDays.length === 0 && !slotsError" class="alert alert-light text-muted">
+                                    This restaurant has no scheduling slots available.
+                                </div>
                             </div>
-                            <p v-else class="text-muted small" v-if="orderType==='takeaway'">Your order will be prepared as soon as possible.</p>
                         </div>
                     </div>
 
@@ -86,10 +89,6 @@ const CustomerCheckoutPage = {
                                     </button>
                                 </div>
                             </div>
-                            <div v-if="!couponsLoading && availableCoupons.length === 0" class="mb-3">
-                                <small class="text-muted">No coupons currently available for this restaurant.</small>
-                            </div>
-
 
                             <div v-if="couponError" class="alert alert-danger">{{ couponError }}</div>
                             <div v-if="appliedCoupon" class="alert alert-success">
@@ -127,7 +126,7 @@ const CustomerCheckoutPage = {
                                     <h5>Total</h5><h5>₹{{ total.toLocaleString('en-IN') }}</h5>
                                 </li>
                             </ul>
-                            <button class="btn btn-brand btn-block mt-4" @click="placeOrder" :disabled="isPlacing || (isScheduling && !selectedTime)">
+                            <button class="btn btn-brand btn-block mt-4" @click="placeOrder" :disabled="isPlacing || (isScheduling && !selectedTime) || cartItems.length === 0">
                                 {{ isPlacing ? 'Placing Order...' : 'Place Order' }}
                             </button>
                         </div>
@@ -138,11 +137,20 @@ const CustomerCheckoutPage = {
     `,
     data() {
         return {
-            isPlacing: false, error: null, deliveryFee: 50.00, orderType: 'takeaway',
+            isPlacing: false,
+            error: null,
+            deliveryFee: 50.00,
+            orderType: 'takeaway',
             scheduleChoice: 'now',
-            slotsLoading: true, slotsError: null, availableDays: [],
-            selectedDate: null, selectedTime: null,
-            isApplyingCoupon: false, couponCode: '', couponError: null, appliedCoupon: null,
+            slotsLoading: true,
+            slotsError: null,
+            availableDays: [],
+            selectedDate: null,
+            selectedTime: null, // This should store the 24-hour time value, e.g., "14:30"
+            isApplyingCoupon: false,
+            couponCode: '',
+            couponError: null,
+            appliedCoupon: null,
             discountAmount: 0,
             availableCoupons: [],
             couponsLoading: true,
@@ -150,11 +158,16 @@ const CustomerCheckoutPage = {
     },
     computed: {
         ...Vuex.mapGetters(['cartItems', 'cartTotal', 'cartRestaurantId']),
-        subtotal() { return this.cartTotal; },
-        total() { 
-            return Math.max(0, this.subtotal + this.deliveryFee - this.discountAmount); 
+        subtotal() {
+            return this.cartTotal;
         },
-        isScheduling() { return this.orderType === 'dine_in' || this.scheduleChoice === 'later'; },
+        total() {
+            return Math.max(0, this.subtotal + this.deliveryFee - this.discountAmount);
+        },
+        isScheduling() {
+            // An order is "scheduling" if it's dine-in OR if it's takeaway for later
+            return this.orderType === 'dine_in' || this.scheduleChoice === 'later';
+        },
         slotsForSelectedDay() {
             if (!this.selectedDate) return [];
             const day = this.availableDays.find(d => d.date_value === this.selectedDate);
@@ -162,60 +175,54 @@ const CustomerCheckoutPage = {
         }
     },
     watch: {
-        isScheduling(isScheduling, oldIsScheduling) {
-            // Only fetch slots if scheduling becomes true AND slots haven't been loaded yet or type changed
-             if (isScheduling && (!oldIsScheduling || this.slots.length === 0)) {
-                 this.fetchAvailableSlots();
-             }
-             // Set default date if switching to scheduling and days are available
-             if (isScheduling && this.availableDays.length > 0 && !this.selectedDate) {
-                 this.selectedDate = this.availableDays[0].date_value;
-             } else if (!isScheduling) {
-                 this.selectedDate = null;
-                 this.selectedTime = null;
-             }
-         },
-        selectedDate() { this.selectedTime = null; } // Reset time when date changes
-    },
-    async mounted() {
-        // Fetch slots only if needed initially (e.g., if default is dine-in)
-        if (this.isScheduling) {
-             await this.fetchAvailableSlots();
-        } else {
-            this.slotsLoading = false; // Don't show loading if not scheduling initially
+        isScheduling(isScheduling) {
+            // When scheduling is activated, pre-select the first available date
+            if (isScheduling && this.availableDays.length > 0 && !this.selectedDate) {
+                this.selectedDate = this.availableDays[0].date_value;
+            } else if (!isScheduling) {
+                // If not scheduling, clear selections
+                this.selectedDate = null;
+                this.selectedTime = null;
+            }
+        },
+        selectedDate() {
+            // When date changes, reset the selected time
+            this.selectedTime = null;
         }
-        await this.fetchApplicableCoupons();
     },
     methods: {
         selectOrderType(type) {
             this.orderType = type;
+            // If user selects dine-in, they must schedule.
+            // If they select takeaway, default to 'now'.
             if (type === 'dine_in') {
-                this.scheduleChoice = 'later'; // Force scheduling for dine-in
+                this.scheduleChoice = 'later';
             } else {
-                 // Reset to 'now' for takeaway unless user explicitly chose 'later'
-                 if(this.scheduleChoice !== 'later') {
-                    this.scheduleChoice = 'now';
-                 }
+                this.scheduleChoice = 'now';
             }
         },
         async fetchAvailableSlots() {
-            if (!this.cartRestaurantId) { this.slotsError = "Cart is empty."; this.slotsLoading = false; return; }
-            this.slotsLoading = true; this.slotsError = null;
+            if (!this.cartRestaurantId) {
+                this.slotsError = "Your cart is empty. Please add an item to see slots.";
+                this.slotsLoading = false;
+                return;
+            }
+            this.slotsLoading = true;
+            this.slotsError = null;
             try {
-                // ✅ USE apiService
-                const data = await apiService.get(`/api/restaurants/${this.cartRestaurantId}/available-slots`);
-                this.availableDays = data;
-                 if (this.availableDays.length > 0) {
-                     // Set default date if not already set
-                     if (!this.selectedDate) {
+                // ✅ UPDATED: Use apiService.get
+                this.availableDays = await apiService.get(`/api/restaurant/${this.cartRestaurantId}/available-slots`);
+                if (this.availableDays.length === 0) {
+                    this.slotsError = "This restaurant has no scheduled time slots available for any day.";
+                } else {
+                    // Pre-select first date if scheduling is already active
+                    if (this.isScheduling && !this.selectedDate) {
                         this.selectedDate = this.availableDays[0].date_value;
-                     }
-                 } else {
-                    this.slotsError = "This restaurant has no scheduled time slots available.";
-                 }
+                    }
+                }
             } catch (err) {
-                this.slotsError = "Error loading time slots: " + err.message;
-                this.availableDays = []; // Clear days on error
+                this.slotsError = err.message;
+                console.error("Error fetching slots:", err);
             } finally {
                 this.slotsLoading = false;
             }
@@ -224,11 +231,10 @@ const CustomerCheckoutPage = {
             if (!this.cartRestaurantId) return;
             this.couponsLoading = true;
             try {
-                 // ✅ USE apiService
+                // ✅ UPDATED: Use apiService.get
                 this.availableCoupons = await apiService.get(`/api/coupons/applicable/${this.cartRestaurantId}`);
             } catch (err) {
-                console.error("Could not load coupons:", err.message); // Log error silently
-                this.availableCoupons = []; // Ensure it's an empty array on error
+                console.error("Error loading coupons:", err.message); // Log silently
             } finally {
                 this.couponsLoading = false;
             }
@@ -239,13 +245,13 @@ const CustomerCheckoutPage = {
         },
         async applyCoupon() {
             if (!this.couponCode) {
-                this.couponError = "Please enter a coupon code.";
+                this.couponError = "Please enter a code.";
                 return;
             }
             this.isApplyingCoupon = true;
             this.couponError = null;
             try {
-                // ✅ USE apiService
+                // ✅ UPDATED: Use apiService.post
                 const data = await apiService.post('/api/coupons/apply', {
                     code: this.couponCode,
                     subtotal: this.subtotal,
@@ -255,43 +261,65 @@ const CustomerCheckoutPage = {
                 this.appliedCoupon = this.couponCode;
             } catch (err) {
                 this.couponError = err.message;
-                this.discountAmount = 0; // Reset discount on error
-                this.appliedCoupon = null;
             } finally {
                 this.isApplyingCoupon = false;
             }
         },
         async placeOrder() {
-            this.isPlacing = true; this.error = null;
+            this.isPlacing = true;
+            this.error = null;
             if (this.isScheduling && !this.selectedTime) {
-                this.error = "Please select a time slot for your scheduled order.";
-                this.isPlacing = false; return;
+                this.error = "Please select a date and time slot for your scheduled order.";
+                this.isPlacing = false;
+                return;
             }
             
-            // Construct the payload exactly as the backend expects
-            let payload = {
+            // Construct the full ISO 8601-like string for the backend
+            let fullScheduledTime = null;
+            if(this.isScheduling && this.selectedDate && this.selectedTime) {
+                // e.g., "2025-10-25" + "T" + "14:30:00"
+                // Assuming selectedTime is "HH:MM" (like 14:30), we add ":00" for seconds.
+                // If your backend is flexible, "YYYY-MM-DDTHH:MM" might also work.
+                fullScheduledTime = `${this.selectedDate}T${this.selectedTime}:00`; 
+            }
+
+            const payload = {
                 restaurant_id: this.cartRestaurantId,
                 order_type: this.orderType,
                 items: this.cartItems.map(item => ({ menu_item_id: item.id, quantity: item.quantity })),
-                coupon_code: this.appliedCoupon, // Send the code if applied
-                is_scheduled: this.isScheduling, // Send boolean flag
-                // Send ISO 8601 string ONLY if scheduling
-                scheduled_time: this.isScheduling && this.selectedTime ? this.selectedTime : null 
+                coupon_code: this.appliedCoupon,
+                is_scheduled: this.isScheduling,
+                // Send the full timestamp string, or null if not scheduling
+                scheduled_time: fullScheduledTime 
             };
 
             try {
-                // ✅ USE apiService
+                // ✅ UPDATED: Use apiService.post
                 const data = await apiService.post('/api/orders', payload);
-                
                 this.$store.dispatch('clearCart');
-                alert(data.message || "Order placed successfully!"); // Use backend message
+                alert(data.message || "Order placed successfully!");
+                // Redirect to the order detail page for the new order
                 this.$router.push({ name: 'OrderDetail', params: { id: data.order_id } });
             } catch (err) {
-                this.error = "Error placing order: " + err.message;
+                this.error = err.message;
+                console.error("Error placing order:", err);
             } finally {
                 this.isPlacing = false;
             }
         }
+    },
+    async mounted() {
+        // Fetch data on component load
+        // Wait for cartRestaurantId to be available from Vuex
+        if (this.cartRestaurantId) {
+             await this.fetchAvailableSlots();
+             await this.fetchApplicableCoupons();
+        } else {
+             this.slotsError = "Your cart is empty. Please add an item to start an order.";
+             this.slotsLoading = false;
+             this.couponsLoading = false;
+        }
     }
 };
+// NOTE: No export default needed
 

@@ -1,3 +1,5 @@
+// NOTE: No imports needed. Assumes $, apiService, and Vuex store are global.
+
 const RestaurantTimeSlotManagementPage = {
     template: `
         <div class="admin-container">
@@ -31,6 +33,7 @@ const RestaurantTimeSlotManagementPage = {
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-brand btn-block" :disabled="isSaving">
+                                    <span v-if="isSaving" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                     {{ isSaving ? 'Adding...' : 'Add Slot' }}
                                 </button>
                             </form>
@@ -41,7 +44,7 @@ const RestaurantTimeSlotManagementPage = {
                 <!-- Existing Slots Display -->
                 <div class="col-lg-8">
                     <div v-if="slots.length === 0" class="card card-body text-center">
-                        <p class="text-muted mb-0">No time slots have been added yet.</p>
+                        <p class="text-muted mb-0">No time slots have been added yet. Use the form to create your first one.</p>
                     </div>
                     <div v-else>
                         <div v-for="day in daysOfWeek" :key="day" class="mb-3">
@@ -67,30 +70,43 @@ const RestaurantTimeSlotManagementPage = {
     `,
     data() {
         return {
-            loading: true, isSaving: false, error: null, slots: [],
-            newSlot: { day_of_week: 'Monday', start_time: '09:00', end_time: '17:00' },
+            loading: true,
+            isSaving: false,
+            error: null,
+            slots: [],
+            newSlot: {
+                day_of_week: 'Monday',
+                start_time: '09:00',
+                end_time: '17:00'
+            },
             daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         };
     },
     methods: {
         async fetchSlots() {
-            this.loading = true; this.error = null;
+            this.loading = true;
+            this.error = null;
             try {
+                // ✅ UPDATED: Use apiService.get
                 this.slots = await apiService.get('/api/restaurant/timeslots');
             } catch (err) {
                 this.error = "Failed to load time slots. " + err.message;
+                console.error("Error in fetchSlots:", err);
             } finally {
                 this.loading = false;
             }
         },
         async addSlot() {
-            this.isSaving = true; this.error = null;
+            this.isSaving = true;
+            this.error = null;
             try {
+                // ✅ UPDATED: Use apiService.post
                 const data = await apiService.post('/api/restaurant/timeslots', this.newSlot);
-                alert(data.message);
-                await this.fetchSlots();
+                alert(data.message || "Slot added!");
+                await this.fetchSlots(); // Refresh the list
             } catch (err) {
                 this.error = "Error adding slot: " + err.message;
+                console.error("Error in addSlot:", err);
             } finally {
                 this.isSaving = false;
             }
@@ -98,11 +114,13 @@ const RestaurantTimeSlotManagementPage = {
         async deleteSlot(slotId) {
             if (!confirm('Are you sure you want to delete this time slot?')) return;
             try {
+                // ✅ UPDATED: Use apiService.delete
                 const data = await apiService.delete(`/api/restaurant/timeslots/${slotId}`);
-                alert(data.message);
-                await this.fetchSlots();
+                alert(data.message || "Slot deleted.");
+                await this.fetchSlots(); // Refresh the list
             } catch (err) {
                 this.error = "Error deleting slot: " + err.message;
+                console.error("Error in deleteSlot:", err);
             }
         },
         getSlotsForDay(day) {
@@ -113,7 +131,7 @@ const RestaurantTimeSlotManagementPage = {
             const [hours, minutes] = timeStr.split(':');
             const h = parseInt(hours);
             const suffix = h >= 12 ? 'PM' : 'AM';
-            const formattedHour = ((h + 11) % 12 + 1);
+            const formattedHour = ((h + 11) % 12 + 1); // Converts 24h to 12h (0->12, 13->1, etc.)
             return `${formattedHour}:${minutes} ${suffix}`;
         }
     },
@@ -121,4 +139,5 @@ const RestaurantTimeSlotManagementPage = {
         this.fetchSlots();
     }
 };
+// NOTE: No export default needed
 

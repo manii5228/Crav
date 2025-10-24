@@ -1,9 +1,14 @@
+// NOTE: No imports needed. Assumes apiService and Vuex store are global.
+
 const CustomerRewardsPage = {
     template: `
         <div class="container my-5">
             <h2 class="text-center mb-5">Loyalty & <span class="text-brand">Rewards</span></h2>
 
-            <div v-if="loading" class="text-center">Loading your rewards details...</div>
+            <div v-if="loading" class="text-center">
+                <div class="spinner-border text-brand" role="status"></div>
+                <p class="mt-2 text-muted">Loading your rewards details...</p>
+            </div>
             <div v-if="error" class="alert alert-danger">{{ error }}</div>
 
             <div v-if="!loading && !error" class="row justify-content-center">
@@ -52,17 +57,25 @@ const CustomerRewardsPage = {
             this.loading = true;
             this.error = null;
             try {
+                // ✅ UPDATED: Use apiService.get
+                // It automatically sends the authentication token
                 const data = await apiService.get('/api/rewards');
+                
                 this.points_balance = data.points_balance;
                 this.history = data.history;
+
             } catch (err) {
                 this.error = err.message;
+                 console.error("Error fetching rewards:", err);
             } finally {
                 this.loading = false;
             }
         }
     },
     mounted() {
+        // Fetch data when the component is loaded
         this.fetchRewardsData();
     }
 };
+// NOTE: No export default needed
+

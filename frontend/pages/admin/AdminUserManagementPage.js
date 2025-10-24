@@ -1,3 +1,5 @@
+// NOTE: No imports needed. Assumes $, apiService, and Vuex store are global.
+
 const AdminUserManagementPage = {
     template: `
         <div class="admin-container">
@@ -14,12 +16,16 @@ const AdminUserManagementPage = {
 
             <div class="card" v-if="!loading && !error">
                 <div class="card-header bg-white">
-                    <input type="text" v-model="searchQuery" @input="fetchUsers" class="form-control" placeholder="Search by name or email...">
+                     <div class="row align-items-center">
+                         <div class="col-md-4">
+                            <input type="text" v-model="searchQuery" @input="debouncedFetchUsers" class="form-control" placeholder="Search by name or email...">
+                         </div>
+                     </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead>
+                            <thead class="thead-light">
                                 <tr>
                                     <th>ID</th><th>Name</th><th>Email</th>
                                     <th class="text-center">Total Orders</th><th>Total Spent</th>
@@ -55,18 +61,35 @@ const AdminUserManagementPage = {
     `,
     data() {
         return {
-            loading: true, error: null, searchQuery: '', users: [], isExporting: false,
+            loading: true,
+            error: null,
+            searchQuery: '',
+            users: [],
+            isExporting: false,
+             debounceTimer: null,
         };
     },
     methods: {
+         debouncedFetchUsers() {
+             clearTimeout(this.debounceTimer);
+             this.debounceTimer = setTimeout(() => {
+                 this.fetchUsers();
+             }, 500); // 500ms delay
+         },
         async fetchUsers() {
             this.error = null;
+             // Only show main loading indicator on initial load
+             if (this.users.length === 0) {
+                 this.loading = true;
+             }
             try {
                 const params = new URLSearchParams();
                 if (this.searchQuery) params.append('search', this.searchQuery);
+                // Use apiService.get
                 this.users = await apiService.get(`/api/admin/users?${params.toString()}`);
             } catch (err) {
                 this.error = err.message;
+                 console.error("Error fetching users:", err);
             } finally {
                 this.loading = false;
             }
@@ -74,28 +97,38 @@ const AdminUserManagementPage = {
         async blockUser(user) {
             if (!confirm(`Block ${user.name}? They will not be able to log in.`)) return;
             try {
+                // Use apiService.patch
                 const data = await apiService.patch(`/api/admin/users/${user.id}/block`);
                 alert(data.message);
-                this.fetchUsers();
-            } catch (err) { alert('Error: ' + err.message); }
+                this.fetchUsers(); // Refresh list
+            } catch (err) {
+                 console.error("Error blocking user:", err);
+                 alert('Error: ' + err.message);
+            }
         },
         async unblockUser(user) {
             if (!confirm(`Unblock ${user.name}?`)) return;
             try {
+                // Use apiService.patch
                 const data = await apiService.patch(`/api/admin/users/${user.id}/unblock`);
                 alert(data.message);
-                this.fetchUsers();
-            } catch (err) { alert('Error: ' + err.message); }
+                this.fetchUsers(); // Refresh list
+            } catch (err) {
+                 console.error("Error unblocking user:", err);
+                 alert('Error: ' + err.message);
+            }
         },
         async exportData() {
             this.isExporting = true;
             try {
-                const token = this.$store.state.token;
-                const response = await fetch(`${window.API_URL}/api/admin/users/export`, { headers: { 'Authentication-Token': token } });
-                if (!response.ok) throw new Error('Failed to download file.');
-                const blob = await response.blob();
+                 // Use apiService.download
+                 const blob = await apiService.download('/api/admin/users/export');
+                 if (!blob) throw new Error("Received empty export file.");
+
+                // Create a link and click it to trigger download
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
+                a.style.display = 'none';
                 a.href = url;
                 a.download = 'users_export.xlsx';
                 document.body.appendChild(a);
@@ -103,7 +136,8 @@ const AdminUserManagementPage = {
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
             } catch (err) {
-                alert('Error: ' + err.message);
+                 console.error("Error exporting user data:", err);
+                alert('Error exporting data: ' + err.message);
             } finally {
                 this.isExporting = false;
             }
@@ -111,5 +145,11 @@ const AdminUserManagementPage = {
     },
     mounted() {
         this.fetchUsers();
-    }
+    },
+     beforeDestroy() {
+         // Clear the timer when the component is destroyed
+         clearTimeout(this.debounceTimer);
+     }
 };
+// NOTE: No export default needed
+

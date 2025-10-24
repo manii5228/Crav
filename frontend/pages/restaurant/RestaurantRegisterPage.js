@@ -1,3 +1,5 @@
+// NOTE: No imports needed. Assumes $, apiService, and router are global.
+
 const RestaurantRegisterPage = {
     template: `
         <div class="login-container">
@@ -63,6 +65,7 @@ const RestaurantRegisterPage = {
                         </div>
                         
                         <button type="submit" class="btn btn-brand btn-block mt-4" :disabled="loading">
+                            <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                             {{ loading ? 'Submitting...' : 'Submit for Verification' }}
                         </button>
                     </form>
@@ -78,10 +81,19 @@ const RestaurantRegisterPage = {
     data() {
         return {
             form: {
-                ownerName: '', ownerEmail: '', password: '', restaurantName: '',
-                address: '', city: '', latitude: null, longitude: null
+                ownerName: '',
+                ownerEmail: '',
+                password: '',
+                restaurantName: '',
+                address: '',
+                city: '',
+                latitude: null,
+                longitude: null
             },
-            error: null, success: null, loading: false, isGeocoding: false, 
+            error: null,
+            success: null,
+            loading: false, // For the main submit button
+            isGeocoding: false, // For the geocode button
         };
     },
     methods: {
@@ -90,36 +102,51 @@ const RestaurantRegisterPage = {
                 this.error = "Please enter an address and city first.";
                 return;
             }
-            this.isGeocoding = true; this.error = null;
+            this.isGeocoding = true;
+            this.error = null;
             try {
                 const fullAddress = `${this.form.address}, ${this.form.city}`;
+                // ✅ UPDATED: Use apiService.post
+                // Note: Geocode is a public-facing helper, so it doesn't need auth
                 const data = await apiService.post('/api/geocode', { address: fullAddress });
                 this.form.latitude = data.latitude;
                 this.form.longitude = data.longitude;
             } catch (err) {
                 this.error = err.message;
+                console.error("Error geocoding:", err);
             } finally {
                 this.isGeocoding = false;
             }
         },
         async handleRegister() {
-            this.error = null; this.success = null; this.loading = true;
+            this.error = null;
+            this.success = null;
+            this.loading = true;
+
             if (this.form.password.length < 6) {
                 this.error = 'Password must be at least 6 characters long.';
                 this.loading = false;
                 return;
             }
+
             try {
+                // ✅ UPDATED: Use apiService.post
                 const data = await apiService.post('/api/restaurant/register', this.form);
                 this.success = data.message + ' You will be redirected to login.';
+                
+                // Redirect to login after 3 seconds
                 setTimeout(() => {
                     this.$router.push('/restaurant/login');
                 }, 3000);
+
             } catch (err) {
                 this.error = err.message;
+                console.error("Error registering restaurant:", err);
             } finally {
                 this.loading = false;
             }
         },
     },
 };
+// NOTE: No export default needed
+

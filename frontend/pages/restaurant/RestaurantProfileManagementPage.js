@@ -1,3 +1,5 @@
+// NOTE: No imports needed. Assumes $, apiService, and Vuex store are global.
+
 const RestaurantProfileManagementPage = {
     template: `
         <div class="admin-container">
@@ -11,6 +13,7 @@ const RestaurantProfileManagementPage = {
                     <form @submit.prevent="updateProfile">
                         <div v-if="successMessage" class="alert alert-success">{{ successMessage }}</div>
                         
+                        <!-- Accepting Orders Toggle -->
                         <div class="form-group d-flex justify-content-between align-items-center">
                             <div>
                                 <h5>Accepting Orders</h5>
@@ -24,6 +27,7 @@ const RestaurantProfileManagementPage = {
 
                         <hr class="my-4">
 
+                        <!-- Basic Details -->
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="restaurantName">Restaurant Name</label>
@@ -49,6 +53,7 @@ const RestaurantProfileManagementPage = {
                         
                         <hr class="my-4">
 
+                        <!-- Photo Gallery -->
                         <h5>Photo Gallery</h5>
                         <div v-if="uploadError" class="alert alert-danger mt-2">{{ uploadError }}</div>
                         <div class="row gallery-thumbnails mt-3">
@@ -70,7 +75,9 @@ const RestaurantProfileManagementPage = {
                             </div>
                         </div>
 
+                        <!-- Save Button -->
                         <button type="submit" class="btn btn-brand float-right" :disabled="isSaving">
+                             <span v-if="isSaving" class="spinner-border spinner-border-sm mr-1"></span>
                             {{ isSaving ? 'Saving...' : 'Save Changes' }}
                         </button>
                     </form>
@@ -80,29 +87,53 @@ const RestaurantProfileManagementPage = {
     `,
     data() {
         return {
-            loading: true, isSaving: false, error: null, successMessage: null,
-            restaurant: { isActive: true, name: '', openingHours: '', address: '', city: '', description: '', gallery: [] },
-            isUploading: false, uploadError: null,
+            loading: true,
+            isSaving: false,
+            error: null,
+            successMessage: null,
+            restaurant: {
+                isActive: true,
+                name: '',
+                openingHours: '',
+                address: '',
+                city: '',
+                description: '',
+                gallery: []
+            },
+            isUploading: false,
+            uploadError: null,
         };
     },
     methods: {
         async fetchProfile() {
-            this.loading = true; this.error = null;
+            this.loading = true;
+            this.error = null;
             try {
+                // ✅ UPDATED: Use apiService.get
                 this.restaurant = await apiService.get('/api/restaurant/profile');
+                // Ensure gallery is an array if it's null
+                if (!this.restaurant.gallery) {
+                    this.restaurant.gallery = [];
+                }
             } catch (err) {
                 this.error = err.message;
+                console.error("Error fetching profile:", err);
             } finally {
                 this.loading = false;
             }
         },
         async updateProfile() {
-            this.isSaving = true; this.successMessage = null; this.error = null;
+            this.isSaving = true;
+            this.successMessage = null;
+            this.error = null; // Clear general error
+            this.uploadError = null; // Clear upload error
             try {
+                // ✅ UPDATED: Use apiService.put
                 const data = await apiService.put('/api/restaurant/profile', this.restaurant);
                 this.successMessage = data.message;
             } catch (err) {
-                this.error = "Error: " + err.message;
+                this.error = "Error: " + err.message; // Show error at top
+                console.error("Error updating profile:", err);
             } finally {
                 this.isSaving = false;
             }
@@ -110,21 +141,32 @@ const RestaurantProfileManagementPage = {
         async handlePhotoUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
-            this.isUploading = true; this.uploadError = null;
+
+            this.isUploading = true;
+            this.uploadError = null;
+            this.successMessage = null; // Clear save message
+
             const formData = new FormData();
             formData.append('image_file', file);
+            
             try {
+                // ✅ UPDATED: Use apiService.post
                 const data = await apiService.post('/api/upload/image', formData);
+                // Add the new image URL to the gallery
+                if (!this.restaurant.gallery) {
+                     this.restaurant.gallery = [];
+                }
                 this.restaurant.gallery.push(data.url);
             } catch (err) {
                 this.uploadError = err.message;
+                console.error("Error uploading photo:", err);
             } finally {
                 this.isUploading = false;
-                event.target.value = '';
+                event.target.value = ''; // Reset file input
             }
         },
         removePhoto(index) {
-            if (confirm('Are you sure you want to remove this photo?')) {
+            if (confirm('Are you sure you want to remove this photo? You must click "Save Changes" to make this permanent.')) {
                 this.restaurant.gallery.splice(index, 1);
             }
         }
@@ -133,3 +175,5 @@ const RestaurantProfileManagementPage = {
         this.fetchProfile();
     }
 };
+// NOTE: No export default needed
+

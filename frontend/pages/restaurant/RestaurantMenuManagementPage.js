@@ -1,3 +1,5 @@
+// NOTE: No imports needed. Assumes $, XLSX, apiService, and Vuex store are global.
+
 const RestaurantMenuManagementPage = {
     template: `
         <div class="admin-container">
@@ -43,6 +45,7 @@ const RestaurantMenuManagementPage = {
                 <div v-for="category in categories" :key="category.id" class="card mb-4">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">{{ category.name }}</h4>
+                        <!-- Add Category Edit/Delete buttons here if needed -->
                     </div>
                     <div class="card-body">
                         <div v-if="category.menu_items.length === 0" class="text-center text-muted p-3">This category is empty.</div>
@@ -91,7 +94,7 @@ const RestaurantMenuManagementPage = {
                                 <div class="form-group"><label>Description</label><textarea class="form-control" v-model="currentItem.description" rows="3"></textarea></div>
                                 <div class="form-row">
                                     <div class="form-group col-md-6"><label>Price</label><input type="number" step="0.01" class="form-control" v-model.number="currentItem.price" required></div>
-                                    <div class="form-group col-md-6"><label>Category</label><select class="form-control" v-model="currentItem.category_id" required><option v-for="cat in categories" :value="cat.id">{{ cat.name }}</option></select></div>
+                                    <div class="form-group col-md-6"><label>Category</label><select class="form-control" v-model="currentItem.category_id" required><option :value="null">Select a category...</option><option v-for="cat in categories" :value="cat.id">{{ cat.name }}</option></select></div>
                                 </div>
                                 <div class="form-group"><label>Item Image</label><div class="custom-file"><input type="file" class="custom-file-input" id="itemImage" @change="handleImageSelect" accept="image/jpeg, image/png, image/webp"><label class="custom-file-label" for="itemImage">{{ imageFile ? imageFile.name : 'Choose image...' }}</label></div></div>
                                 <div v-if="imagePreview" class="text-center mt-2"><img :src="imagePreview" class="img-fluid rounded mb-2" style="max-height: 200px;"/><button type="button" class="btn btn-sm btn-outline-danger" @click="removeImage"><i class="fas fa-times mr-1"></i> Remove</button></div>
@@ -99,7 +102,7 @@ const RestaurantMenuManagementPage = {
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-brand" @click="saveMenuItem" :disabled="isSaving"><span v-if="isSaving" class="spinner-border spinner-border-sm"></span> {{ isSaving ? 'Saving...' : (isEditMode ? 'Save' : 'Add') }}</button>
+                            <button type="button" class="btn btn-brand" @click="saveMenuItem" :disabled="isSaving"><span v-if="isSaving" class="spinner-border spinner-border-sm"></span> {{ isSaving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Add Item') }}</button>
                         </div>
                     </div>
                 </div>
@@ -117,9 +120,11 @@ const RestaurantMenuManagementPage = {
         async fetchMenu() {
             this.loading = true; this.error = null;
             try {
+                // ✅ UPDATED: Use apiService.get
                 this.categories = await apiService.get('/api/restaurant/menu');
             } catch (err) {
                 this.error = err.message;
+                console.error("Error fetching menu:", err);
             } finally {
                 this.loading = false;
             }
@@ -132,8 +137,10 @@ const RestaurantMenuManagementPage = {
         },
         openEditItemModal(item, categoryId) {
             this.isEditMode = true;
+            // Create a deep copy to avoid mutating state directly
             this.currentItem = JSON.parse(JSON.stringify({ ...item, category_id: categoryId }));
-            this.imageFile = null; this.imagePreview = item.image;
+            this.imageFile = null; 
+            this.imagePreview = item.image; // Set preview to existing image
             $('#menuItemModal').modal('show');
         },
         handleImageSelect(event) {
@@ -143,31 +150,39 @@ const RestaurantMenuManagementPage = {
             this.imagePreview = URL.createObjectURL(file);
         },
         removeImage() {
-            this.imageFile = null; this.imagePreview = null;
-            this.currentItem.image = null; 
+            this.imageFile = null; 
+            this.imagePreview = null; // Clear preview
+            this.currentItem.image = null; // Mark image for removal
         },
         async saveMenuItem() {
             this.isSaving = true;
             try {
+                // Step 1: Upload image if a new one is selected
                 if (this.imageFile) {
                     const formData = new FormData();
                     formData.append('image_file', this.imageFile);
-                    const uploadData = await apiService.post('/api/upload/image', formData); // apiService handles FormData
+                    // ✅ UPDATED: Use apiService.post for image upload
+                    const uploadData = await apiService.post('/api/upload/image', formData);
                     this.currentItem.image = uploadData.url;
                 }
 
                 let saveData;
+                // Step 2: Save the menu item (create or update)
                 if (this.isEditMode) {
+                    // ✅ UPDATED: Use apiService.put
                     saveData = await apiService.put(`/api/restaurant/menu-items/${this.currentItem.id}`, this.currentItem);
                 } else {
+                    // ✅ UPDATED: Use apiService.post
                     saveData = await apiService.post('/api/restaurant/menu-items', this.currentItem);
                 }
                 
-                alert(saveData.message);
+                alert(saveData.message || "Item saved successfully!");
                 $('#menuItemModal').modal('hide');
-                this.fetchMenu();
+                this.fetchMenu(); // Refresh menu list
+
             } catch (err) { 
                 alert('Error: ' + err.message); 
+                console.error("Error saving menu item:", err);
             } finally {
                 this.isSaving = false;
             }
@@ -175,22 +190,28 @@ const RestaurantMenuManagementPage = {
         async deleteItem(itemId) {
             if (!confirm('Are you sure you want to delete this item?')) return;
             try {
+                // ✅ UPDATED: Use apiService.delete
                 const data = await apiService.delete(`/api/restaurant/menu-items/${itemId}`);
-                alert(data.message);
-                this.fetchMenu();
+                alert(data.message || "Item deleted.");
+                this.fetchMenu(); // Refresh menu list
             } catch (err) { 
                 alert('Error: ' + err.message); 
+                console.error("Error deleting item:", err);
             }
         },
         async toggleAvailability(item) {
             try {
+                // ✅ UPDATED: Use apiService.patch
                 await apiService.patch(`/api/restaurant/menu-items/${item.id}/availability`, { is_available: !item.is_available });
                 item.is_available = !item.is_available; // Update UI immediately
             } catch (err) { 
                 alert('Error: ' + err.message); 
+                console.error("Error toggling availability:", err);
+                // Revert UI change on failure if needed
             }
         },
         downloadTemplate() {
+            // This method is client-side and doesn't need apiService
             const worksheet_data = [
                 ["Category", "Name", "Description", "Price"],
                 ["Starters", "Paneer Tikka", "Grilled cottage cheese cubes", 250],
@@ -204,6 +225,11 @@ const RestaurantMenuManagementPage = {
         handleFileSelect(event) {
             this.uploadSuccess = null; this.uploadError = null;
             this.selectedFile = event.target.files[0];
+            // Update file label
+             const label = document.querySelector('.custom-file-label[for="menuFile"]');
+             if (label) {
+                 label.textContent = this.selectedFile ? this.selectedFile.name : 'Choose Excel file...';
+             }
         },
         async handleFileUpload() {
             if (!this.selectedFile) { this.uploadError = "Please select a file first."; return; }
@@ -211,12 +237,20 @@ const RestaurantMenuManagementPage = {
             const formData = new FormData();
             formData.append('menu_file', this.selectedFile);
             try {
-                const data = await apiService.post('/api/restaurant/menu/bulk-upload', formData); // apiService handles FormData
+                // ✅ UPDATED: Use apiService.post
+                const data = await apiService.post('/api/restaurant/menu/bulk-upload', formData);
                 this.uploadSuccess = data.message;
-                this.selectedFile = null; document.getElementById('menuFile').value = null;
-                await this.fetchMenu();
+                this.selectedFile = null; 
+                document.getElementById('menuFile').value = null;
+                // Reset file label
+                const label = document.querySelector('.custom-file-label[for="menuFile"]');
+                if (label) {
+                    label.textContent = 'Choose Excel file...';
+                }
+                await this.fetchMenu(); // Refresh menu
             } catch (err) {
                 this.uploadError = "Upload failed: " + err.message;
+                console.error("Error with bulk upload:", err);
             } finally {
                 this.isUploading = false;
             }
@@ -226,3 +260,5 @@ const RestaurantMenuManagementPage = {
         this.fetchMenu();
     }
 };
+// NOTE: No export default needed
+

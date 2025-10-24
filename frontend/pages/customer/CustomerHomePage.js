@@ -1,4 +1,10 @@
+// NOTE: No imports needed. Assumes RestaurantCard, MenuItem, apiService, and Vuex store are global.
+
 const CustomerHomePage = {
+    components: {
+        'restaurant-card': RestaurantCard,
+        'menu-item': MenuItem
+    },
     template: `
         <div>
             <!-- HERO SECTION -->
@@ -52,10 +58,6 @@ const CustomerHomePage = {
             </section>
         </div>
     `,
-    components: {
-        'restaurant-card': RestaurantCard,
-        'menu-item': MenuItem
-    },
     data() {
         return {
             loading: true,
@@ -68,6 +70,7 @@ const CustomerHomePage = {
         };
     },
     methods: {
+        // --- GEOLOCATION AND DATA FETCHING LOGIC ---
         findNearbyRestaurants() {
             this.isLocating = true;
             this.locationError = null;
@@ -75,7 +78,7 @@ const CustomerHomePage = {
             if (!navigator.geolocation) {
                 this.isLocating = false;
                 this.locationError = "Geolocation is not supported by your browser.";
-                this.fetchFeaturedRestaurants();
+                this.fetchFeaturedRestaurants(); // Fallback
                 return;
             }
 
@@ -83,15 +86,16 @@ const CustomerHomePage = {
                 async (position) => {
                     const { latitude, longitude } = position.coords;
                     try {
+                        // ✅ UPDATED: Use apiService.get
                         const data = await apiService.get(`/api/restaurants/nearby?lat=${latitude}&lng=${longitude}`);
                         this.restaurants = data;
                         if (data.length === 0) {
                             this.locationError = "No restaurants found within 7km.";
-                            this.fetchFeaturedRestaurants();
+                            this.fetchFeaturedRestaurants(); // Fallback if no nearby restaurants
                         }
                     } catch (err) {
                         this.locationError = err.message;
-                        this.fetchFeaturedRestaurants();
+                        this.fetchFeaturedRestaurants(); // Fallback on API error
                     } finally {
                         this.isLocating = false;
                         this.loading = false;
@@ -99,37 +103,58 @@ const CustomerHomePage = {
                 },
                 (error) => {
                     this.isLocating = false;
-                    this.locationError = "You denied the request for Geolocation.";
-                    this.fetchFeaturedRestaurants();
+                     // Handle different geolocation errors
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            this.locationError = "You denied the request for Geolocation.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            this.locationError = "Location information is unavailable.";
+                            break;
+                        case error.TIMEOUT:
+                            this.locationError = "The request to get user location timed out.";
+                            break;
+                        default:
+                            this.locationError = "An unknown error occurred while getting location.";
+                            break;
+                    }
+                    this.fetchFeaturedRestaurants(); // Fallback if user denies permission or error occurs
                 }
             );
         },
         async fetchFeaturedRestaurants() {
             this.loading = true;
             try {
+                // ✅ UPDATED: Use apiService.get
                 const data = await apiService.get('/api/restaurants/featured');
+                // Only populate if nearby search hasn't already done so.
                 if (this.restaurants.length === 0) {
                     this.restaurants = data;
                 }
             } catch (err) {
-                this.locationError = (this.locationError || "") + " " + err.message;
+                // Combine errors if location error already exists
+                this.locationError = (this.locationError ? this.locationError + " " : "") + err.message;
+                 console.error("Error fetching featured restaurants:", err);
             } finally {
                 this.loading = false;
-                this.isLocating = false;
+                this.isLocating = false; // Stop locating indicator
             }
         },
         async fetchRegularMenu() {
             this.menuLoading = true;
             this.menuError = null;
             try {
+                // ✅ UPDATED: Use apiService.get
                 this.menu = await apiService.get('/api/menu-items/regular');
             } catch (err) {
                 this.menuError = err.message;
+                 console.error("Error fetching regular menu:", err);
             } finally {
                 this.menuLoading = false;
             }
         },
         addToCart(item) {
+            // This method is correct, it uses the store
             if (!this.$store.getters.isAuthenticated) {
                 alert("Please log in to add items to your cart.");
                 this.$router.push('/login');
@@ -149,8 +174,10 @@ const CustomerHomePage = {
         },
     },
     mounted() {
-        this.findNearbyRestaurants();
+        // Fetch data when the component is loaded
+        this.findNearbyRestaurants(); // This will handle finding nearby or falling back to featured
         this.fetchRegularMenu();
     }
 };
+// NOTE: No export default needed
 

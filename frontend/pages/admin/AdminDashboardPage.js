@@ -1,11 +1,15 @@
+// NOTE: No imports needed. Assumes apiService is global.
+
 const AdminDashboardPage = {
     template: `
         <div class="admin-container">
             <h2 class="admin-page-title">Platform Dashboard</h2>
-            
+
+            <!-- Loading and Error States -->
             <div v-if="loading" class="alert alert-info">Loading dashboard data...</div>
             <div v-if="error" class="alert alert-danger">{{ error }}</div>
 
+            <!-- Main Content -->
             <div v-if="!loading && !error">
                 <div class="row">
                     <div class="col-lg-3 col-md-6 mb-4">
@@ -93,12 +97,13 @@ const AdminDashboardPage = {
             this.loading = true;
             this.error = null;
             try {
-                // ✅ UPDATED: Now uses the clean apiService.get() method.
+                // Use apiService.get
                 const data = await apiService.get('/api/admin/dashboard');
                 this.stats = data.stats;
                 this.pendingRestaurants = data.pendingRestaurants;
             } catch (err) {
                 this.error = err.message;
+                 console.error("Error fetching admin dashboard data:", err);
             } finally {
                 this.loading = false;
             }
@@ -108,12 +113,13 @@ const AdminDashboardPage = {
                 return;
             }
             try {
-                // ✅ UPDATED: Now uses the clean apiService.patch() method.
+                // Use apiService.patch
                 const data = await apiService.patch(`/api/admin/restaurants/${restaurantId}/verify`);
                 alert(data.message);
                 // Refresh the dashboard data after approval.
                 this.fetchDashboardData();
             } catch (err) {
+                 console.error("Error approving restaurant:", err);
                 alert('Error: ' + err.message);
             }
         }
@@ -122,4 +128,5 @@ const AdminDashboardPage = {
         this.fetchDashboardData();
     }
 };
+// NOTE: No export default needed
 
