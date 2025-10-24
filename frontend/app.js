@@ -23,7 +23,6 @@ const app = new Vue({
             <navbar></navbar>
             <!-- RouterView displays the component for the current route -->
             <router-view :key="$route.fullPath"></router-view>
-            <!-- Optional: Add a footer component here if needed -->
         </div>
     `,
     // Register global components (like the Navbar)
@@ -32,9 +31,9 @@ const app = new Vue({
         'navbar': Navbar,
     },
     // Inject the router and store into the Vue instance
-    // Assumes 'router' and 'store' are globally available from router.js and store.js
-    router: router, // Make sure router.js is loaded before app.js
-    store: store,   // Make sure store.js is loaded before app.js
+    // These are now guaranteed to be defined by the script loading order in index.html
+    router: router,
+    store: store,
 
     // --- Lifecycle Hook ---
     mounted() {
