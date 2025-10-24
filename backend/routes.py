@@ -2073,5 +2073,6 @@ def serve_vue_app(path):
          
          pass # Let the other route handle it
 
-    return render_template('index.html', API_BASE_URL="")s
+    return render_template('index.html', API_BASE_URL="")
+
 
