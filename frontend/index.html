@@ -16,7 +16,7 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
-    <!-- Your Custom Stylesheet -->
+    <!-- Your Custom Stylesheet (Served by Flask) -->
     <link rel="stylesheet" href="/assets/style.css">
 
     <!-- Loading Indicator Styles -->
@@ -59,7 +59,7 @@
       This is the definitive, correct loading order.
     -->
 
-    <!-- 1. Core Libraries (Vue, Vuex, Vue Router) -->
+    <!-- 1. Core Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
     <script src="https://unpkg.com/vuex@3.6.2/dist/vuex.js"></script>
     <script src="https://unpkg.com/vue-router@3.6.5/dist/vue-router.js"></script>
@@ -97,11 +97,7 @@
     <script src="/pages/customer/CustomerOrderHistoryPage.js"></script>
     <script src="/pages/customer/CustomerProfilePage.js"></script>
     <script src="/pages/customer/CustomerRegisterPage.js"></script>
-    <!-- 
-      FIX: The duplicate CustomerRestaurantDetailPage.js was removed from here. 
-      It is now loaded only once, below.
-    -->
-    <script src="/pages/customer/CustomerRestaurantDetailPage.js"></script>
+    <script src="/pages/customer/CustomerRestaurantDetailPage.js"></script> <!-- ** FIX: NO LONGER DUPLICATED ** -->
     <script src="/pages/customer/CustomerRewardsPage.js"></script>
 
     <!-- Restaurant Pages -->
@@ -115,7 +111,7 @@
     <script src="/pages/restaurant/RestaurantRegisterPage.js"></script>
     <script src="/pages/restaurant/RestaurantTimeSlotManagementPage.js"></script>
 
-    <!-- 5. Router (Must load AFTER all pages) -->
+    <!-- 5. Router (Must load AFTER pages) -->
     <script src="/utils/router.js"></script>
 
     <!-- 6. Main App Instance (Must load LAST) -->
