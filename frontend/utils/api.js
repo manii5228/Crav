@@ -1,6 +1,5 @@
 // This is your centralized API helper for the UNIFIED deployment model.
 // It automatically adds the authentication token and handles responses.
-// Assumes 'store' is a global variable from store.js
 
 const apiService = {
     // Standard HTTP methods
@@ -19,17 +18,29 @@ const apiService = {
     delete(endpoint) {
         return this.request('DELETE', endpoint);
     },
+    // Special method for downloading files
+    download(endpoint) {
+        return this.request('GET', endpoint, null, 'blob');
+    },
 
     // Core request function
-    async request(method, endpoint, body = null, responseType = 'json') { // Added responseType
+    async request(method, endpoint, body = null, responseType = 'json') {
+        // Ensure endpoint starts with a single /
+        const correctedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
         const headers = {};
-        // Only add Content-Type for methods that typically send a body
-        if (body) {
+
+        // Handle JSON body
+        if (body && !(body instanceof FormData)) {
              headers['Content-Type'] = 'application/json';
         }
 
-        // Get token from the global Vuex store
-        const token = store.state.token;
+        // --- THE DEFINITIVE FIX ---
+        // Read the token directly from localStorage at the time of the request.
+        // This bypasses any Vuex reactivity/timing issues.
+        const token = localStorage.getItem('auth-token');
+        // --- END OF FIX ---
+
         if (token) {
             headers['Authentication-Token'] = token;
         }
@@ -39,55 +50,48 @@ const apiService = {
             headers: headers,
         };
 
-        // Add body if it exists
         if (body) {
-            config.body = JSON.stringify(body);
+            // Handle both FormData (for file uploads) and JSON
+            config.body = (body instanceof FormData) ? body : JSON.stringify(body);
         }
 
         try {
-            // --- CRITICAL CHANGE FOR UNIFIED MODEL ---
-            // Use the relative endpoint directly. The browser automatically uses the current domain.
-            const response = await fetch(endpoint, config);
-            // --- END OF CHANGE ---
+            // Use the relative endpoint directly (e.g., /api/login)
+            // This works because we are on the unified model (same domain)
+            const response = await fetch(correctedEndpoint, config);
 
-            // Handle non-ok responses (like 401, 404, 500)
             if (!response.ok) {
-                let errorData = { message: `Request failed with status: ${response.status}` };
+                // Try to parse error message, otherwise throw HTTP error
+                let errorData = { message: `Request failed: ${response.status} ${response.statusText}` };
                 try {
-                    // Try to parse error JSON from the backend
-                    errorData = await response.json();
+                     // Read response body as text first
+                     const rawErrorResponse = await response.text();
+                     // Then try to parse as JSON
+                     errorData = JSON.parse(rawErrorResponse); 
                 } catch (e) {
-                    // If parsing fails, use the status text
-                    errorData.message = response.statusText || errorData.message;
+                    // Could not parse as JSON, use the status text
+                    // This often happens if the server returns an HTML 404/500 page
                 }
-                throw new Error(errorData.message);
+                throw new Error(errorData.message || `Request failed with status ${response.status}`);
             }
 
-            // Handle different expected response types
+            // Handle different response types (Blob, No Content, JSON)
             if (responseType === 'blob') {
-                 // Return the raw blob for file downloads
-                 return response.blob();
+                return response.blob();
             }
-
-            // Handle empty responses (like successful DELETE or PUT without content)
+            if (response.status === 204) { // 204 No Content
+                return null;
+            }
             const contentType = response.headers.get("content-type");
-            if (response.status === 204 || !contentType) { // 204 No Content
-                return null; // Return null or undefined for empty responses
-            }
-
-            // Handle JSON responses
-            if (contentType && contentType.indexOf("application/json") !== -1) {
+            if (contentType && contentType.includes("application/json")) {
                 return response.json();
             }
-
-            // Handle unexpected content types if necessary
-            console.warn("Received unexpected content type:", contentType);
-            return response.text(); // Fallback to text if not JSON
+            // Fallback for any other response
+            return response.text();
 
         } catch (error) {
-            console.error(`API ${method} request to ${endpoint} failed:`, error);
-            // Re-throw the error so the component can catch it
-            throw error;
+            console.error(`API ${method} request to ${correctedEndpoint} failed:`, error);
+            throw error; // Re-throw the error to be caught by the component
         }
     }
 };
