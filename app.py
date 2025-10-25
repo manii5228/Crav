@@ -1,6 +1,4 @@
-# In your app.py
-
-from flask import Flask, send_from_directory  # Make sure send_from_directory is imported
+from flask import Flask, send_from_directory
 from backend.extensions import db, security, api, migrate
 from backend.config import LocalDevelopmentConfig, ProductionConfig
 from backend.security import user_datastore
@@ -26,12 +24,12 @@ def createApp():
     security.init_app(app, user_datastore)
     app.app_context().push()
 
-    # --- This is where your API routes are actually registered ---
+    # --- This is where your API routes are registered ---
     with app.app_context():
         from backend import routes 
 
     # --- ADD THIS CATCH-ALL ROUTE ---
-    # This route must be registered AFTER your API routes and static folder.
+    # This route must be registered AFTER your API routes.
     # It serves your Vue app (index.html) for any path that is not
     # an API route (/api/...) or a static file (/app.js, /style.css, etc.)
     @app.route('/', defaults={'path': ''})
@@ -42,7 +40,7 @@ def createApp():
         if path.startswith("api/"):
             return "API route not found", 404
         
-        # If the path is a static file, serve it
+        # Check if the file exists in the static folder
         static_file_path = os.path.join(app.static_folder, path)
         if os.path.exists(static_file_path):
             return send_from_directory(app.static_folder, path)
@@ -55,4 +53,5 @@ def createApp():
 app = createApp()
 
 if (__name__ == '__main__'):
-    app.run(debug=True, port=10000)
+    # Use 0.0.0.0 to be accessible in Render
+    app.run(host='0.0.0.0', port=10000)
