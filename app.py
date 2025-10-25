@@ -28,15 +28,13 @@ def createApp():
     with app.app_context():
         from backend import routes 
 
-    # --- ADD THIS CATCH-ALL ROUTE ---
-    # This route must be registered AFTER your API routes.
+    # --- THIS CATCH-ALL ROUTE IS CRITICAL ---
     # It serves your Vue app (index.html) for any path that is not
     # an API route (/api/...) or a static file (/app.js, /style.css, etc.)
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
     def catch_all(path):
         # If the path is an API route, let Flask handle it as a 404
-        # (since it wasn't matched by your 'backend.routes')
         if path.startswith("api/"):
             return "API route not found", 404
         
