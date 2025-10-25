@@ -1,23 +1,19 @@
-from flask import Flask
+# In your app.py
+
+from flask import Flask, send_from_directory  # Make sure send_from_directory is imported
 from backend.extensions import db, security, api, migrate
 from backend.config import LocalDevelopmentConfig, ProductionConfig
 from backend.security import user_datastore
 import os
 from flask_cors import CORS
 
-# Import send_from_directory
-from flask import send_from_directory
-
 def createApp():
-    # --- ✅ CORRECT CONFIGURATION FOR UNIFIED SERVICE ---
-    # Tell Flask where static files (JS, CSS, images) and templates (index.html) live
     app = Flask(__name__,
-                static_folder='frontend',      # Serve files from the 'frontend' directory
-                template_folder='frontend',    # Look for index.html in the 'frontend' directory
-                static_url_path='')           # Serve static files from the root URL (e.g., /app.js)
-    # --- ✅ END CORRECTION ---
+                static_folder='frontend',     # Serve files from the 'frontend' directory
+                template_folder='frontend',   # Look for index.html in 'frontend'
+                static_url_path='')         # Serve static files from root (e.g., /app.js)
 
-    CORS(app, resources={r"/api/*": {"origins": "*"}}) # Keep CORS for flexibility
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     if os.environ.get('FLASK_ENV') == 'production':
         app.config.from_object(ProductionConfig)
@@ -25,20 +21,34 @@ def createApp():
         app.config.from_object(LocalDevelopmentConfig)
 
     db.init_app(app)
-    api.init_app(app)
+    api.init_app(app)  # Initializes API
     migrate.init_app(app, db)
     security.init_app(app, user_datastore)
     app.app_context().push()
 
-    # --- ✅ SERVE STATIC FILES MANUALLY (More Robust for SPA) ---
-    # This handles requests for your JS, CSS, images etc.
-    @app.route('/<path:filename>')
-    def serve_static(filename):
-        return send_from_directory(app.static_folder, filename)
-    # --- ✅ END CORRECTION ---
-
+    # --- This is where your API routes are actually registered ---
     with app.app_context():
-        from backend import routes # Import routes AFTER defining serve_static
+        from backend import routes 
+
+    # --- ADD THIS CATCH-ALL ROUTE ---
+    # This route must be registered AFTER your API routes and static folder.
+    # It serves your Vue app (index.html) for any path that is not
+    # an API route (/api/...) or a static file (/app.js, /style.css, etc.)
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def catch_all(path):
+        # If the path is an API route, let Flask handle it as a 404
+        # (since it wasn't matched by your 'backend.routes')
+        if path.startswith("api/"):
+            return "API route not found", 404
+        
+        # If the path is a static file, serve it
+        static_file_path = os.path.join(app.static_folder, path)
+        if os.path.exists(static_file_path):
+            return send_from_directory(app.static_folder, path)
+        
+        # Otherwise, it's a Vue route, so serve the main index.html
+        return send_from_directory(app.template_folder, 'index.html')
 
     return app
 
@@ -46,5 +56,3 @@ app = createApp()
 
 if (__name__ == '__main__'):
     app.run(debug=True, port=10000)
-
-
