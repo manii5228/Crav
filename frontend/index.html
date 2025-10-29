@@ -5,17 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crav</title>
 
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css">
     
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
+    <!-- Your Custom Stylesheet (Served by Flask) -->
+    <!-- This path is relative to the 'frontend' folder, which Flask serves as static root -->
     <link rel="stylesheet" href="/assets/style.css">
 
+    <!-- Loading Indicator Styles -->
     <style>
+        /* This style block ensures the loading indicator is visible while scripts load */
         #loadingIndicator {
             display: flex;
             justify-content: center;
@@ -35,31 +42,47 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        #app { display: none; }
+        /* Hide the main app content until it's ready */
+        #app {
+            display: none;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Loading Indicator: This is shown first -->
     <div id="loadingIndicator">
         <div class="spinner"></div>
         <p class="text-muted mt-3">Loading Crav...</p>
     </div>
 
+    <!-- Main Vue App: This is hidden until Vue is mounted -->
     <div id="app"></div>
 
+    <!-- 
+      START: SCRIPT LOADING
+      This is the definitive, correct loading order.
+    -->
+
+    <!-- 1. Core Libraries (Vue, Vuex, Vue Router) -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
     <script src="https://unpkg.com/vuex@3.6.2/dist/vuex.js"></script>
     <script src="https://unpkg.com/vue-router@3.6.5/dist/vue-router.js"></script>
 
+    <!-- 2. Core Utils (Store must load before API and Router) -->
     <script src="/utils/store.js"></script>
     <script src="/utils/api.js"></script>
 
+    <!-- 3. Reusable Components (Must load before Pages and Router) -->
+    <script src="/components/CartItem.js"></script>
     <script src="/components/MenuItem.js"></script>
     <script src="/components/Navbar.js"></script>
     <script src="/components/RestaurantCard.js"></script>
-    <script src="/components/CartItem.js"></script>
     <script src="/components/ReviewForm.js"></script>
 
+    <!-- 4. Page Components (All pages must load before Router) -->
+    
+    <!-- Admin Pages -->
     <script src="/pages/admin/AdminCouponManagementPage.js"></script>
     <script src="/pages/admin/AdminDashboardPage.js"></script>
     <script src="/pages/admin/AdminLoginPage.js"></script>
@@ -69,6 +92,7 @@
     <script src="/pages/admin/AdminReviewManagementPage.js"></script>
     <script src="/pages/admin/AdminUserManagementPage.js"></script>
 
+    <!-- Customer Pages -->
     <script src="/pages/customer/CustomerCartPage.js"></script>
     <script src="/pages/customer/CustomerCheckoutPage.js"></script>
     <script src="/pages/customer/CustomerFavoritesPage.js"></script>
@@ -78,9 +102,10 @@
     <script src="/pages/customer/CustomerOrderHistoryPage.js"></script>
     <script src="/pages/customer/CustomerProfilePage.js"></script>
     <script src="/pages/customer/CustomerRegisterPage.js"></script>
-    <script src="/pages/customer/CustomerRestaurantDetailPage.js"></script>
+    <script src="/pages/customer/CustomerRestaurantDetailPage.js"></script> <!-- ** FIX: NO LONGER DUPLICATED ** -->
     <script src="/pages/customer/CustomerRewardsPage.js"></script>
 
+    <!-- Restaurant Pages -->
     <script src="/pages/restaurant/RestaurantAnalyticsPage.js"></script>
     <script src="/pages/restaurant/RestaurantDashboardPage.js"></script>
     <script src="/pages/restaurant/RestaurantLoginPage.js"></script>
@@ -91,15 +116,23 @@
     <script src="/pages/restaurant/RestaurantRegisterPage.js"></script>
     <script src="/pages/restaurant/RestaurantTimeSlotManagementPage.js"></script>
 
+    <!-- 5. Router (Must load AFTER pages) -->
     <script src="/utils/router.js"></script>
 
+    <!-- 6. Main App Instance (Must load LAST) -->
     <script src="/app.js"></script>
-    
+
+    <!-- 
+      END: SCRIPT LOADING
+    -->
+
+    <!-- Bootstrap JS (for dropdowns, modals, etc.) -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"></script>
     
+    <!-- SheetJS (for Excel export) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 </body>
 </html>
+
